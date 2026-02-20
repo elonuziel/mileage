@@ -19,6 +19,16 @@ const exportDataBtn = document.getElementById('exportDataBtn');
 const clearDataBtn = document.getElementById('clearDataBtn');
 const logList = document.getElementById('logList');
 
+// Edit Modal Elements
+const editModal = document.getElementById('editModal');
+const editLogForm = document.getElementById('editLogForm');
+const editOdo = document.getElementById('editOdo');
+const editFuel = document.getElementById('editFuel');
+const editLogId = document.getElementById('editLogId');
+const closeEditBtn = document.getElementById('closeEditBtn');
+const deleteLogBtn = document.getElementById('deleteLogBtn');
+const editFuelGroup = document.getElementById('editFuelGroup');
+
 const elAvgL100 = document.getElementById('avgL100');
 const elAvgKmL = document.getElementById('avgKmL');
 const elTotalKm = document.getElementById('totalKm');
@@ -35,6 +45,11 @@ function init() {
     importCsvInput.addEventListener('change', handleImportCSV);
     exportDataBtn.addEventListener('click', handleExportCSV);
     clearDataBtn.addEventListener('click', handleClearData);
+
+    // Modal listeners
+    closeEditBtn.addEventListener('click', () => editModal.close());
+    editLogForm.addEventListener('submit', handleEditLogSubmit);
+    deleteLogBtn.addEventListener('click', handleDeleteLog);
 }
 
 // Global Form Handlers are attached dynamically on render
@@ -139,8 +154,103 @@ function handleRefuelLog(e) {
     };
 
     logs.unshift(newLog); // Add to beginning
+    recalculateLogs();
     saveLogs();
     updateUI();
+}
+
+function recalculateLogs() {
+    if (logs.length === 0) return;
+
+    // Sort chronologically (oldest first)
+    logs.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // First entry becomes the base
+    const firstLog = logs[0];
+    firstLog.isBase = true;
+    firstLog.distance = 0;
+
+    for (let i = 1; i < logs.length; i++) {
+        const prev = logs[i - 1];
+        const curr = logs[i];
+
+        curr.isBase = false;
+        const distance = curr.odometer - prev.odometer;
+        curr.distance = parseFloat(distance.toFixed(1));
+
+        if (distance > 0 && curr.fuel > 0) {
+            const l100 = (curr.fuel / distance) * 100;
+            const kml = distance / curr.fuel;
+            curr.l100km = parseFloat(l100.toFixed(2));
+            curr.kmL = parseFloat(kml.toFixed(2));
+        } else {
+            curr.l100km = 0;
+            curr.kmL = 0;
+        }
+    }
+
+    // Sort back to reverse chronological (newest first)
+    logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function openEditModal(id) {
+    const log = logs.find(l => l.id === id);
+    if (!log) return;
+
+    editLogId.value = log.id;
+    editOdo.value = log.odometer;
+
+    if (log.isBase) {
+        editFuelGroup.style.display = 'none';
+        editFuel.removeAttribute('required');
+        editFuel.value = '';
+    } else {
+        editFuelGroup.style.display = 'flex';
+        editFuel.setAttribute('required', 'true');
+        editFuel.value = log.fuel;
+    }
+
+    editModal.showModal();
+}
+
+function handleEditLogSubmit(e) {
+    e.preventDefault();
+    const id = parseInt(editLogId.value);
+    const log = logs.find(l => l.id === id);
+    if (!log) return;
+
+    const newOdo = parseFloat(editOdo.value);
+    if (isNaN(newOdo) || newOdo < 0) {
+        alert("אנא הכנס קריאת מד מרחק תקינה.");
+        return;
+    }
+
+    log.odometer = newOdo;
+
+    if (!log.isBase) {
+        const newFuel = parseFloat(editFuel.value);
+        if (isNaN(newFuel) || newFuel <= 0) {
+            alert("אנא הכנס כמות דלק תקינה.");
+            return;
+        }
+        log.fuel = newFuel;
+    }
+
+    editModal.close();
+    recalculateLogs();
+    saveLogs();
+    updateUI();
+}
+
+function handleDeleteLog() {
+    const id = parseInt(editLogId.value);
+    if (confirm("האם אתה בטוח שברצונך למחוק רשומה זו?")) {
+        logs = logs.filter(l => l.id !== id);
+        editModal.close();
+        recalculateLogs();
+        saveLogs();
+        updateUI();
+    }
 }
 
 function handleClearData() {
@@ -200,12 +310,14 @@ function parseCSV(csvText) {
         }
 
         if (importedLogs.length > 0) {
-            // Sort merged array so newest is at the top ([0])
-            logs = [...logs, ...importedLogs].sort((a, b) => new Date(b.date) - new Date(a.date));
-            // Remove exact duplicates by ID (or just save the whole merged list)
+            // Merge arrays
+            logs = [...logs, ...importedLogs];
+
+            // Remove exact duplicates by ID
             const uniqueLogs = Array.from(new Map(logs.map(log => [log.id, log])).values());
             logs = uniqueLogs;
 
+            recalculateLogs(); // This will properly sort and fix all distances/bases
             saveLogs();
             updateUI();
             alert(`יובאו בהצלחה ${importedLogs.length} רשומות!`);
@@ -304,15 +416,28 @@ function renderList() {
 
         const el = document.createElement('div');
         el.className = 'log-item';
+        // Check if there's any efficiency data, otherwise show simple view
+        const hasEffData = log.l100km > 0 || log.kmL > 0;
+
+        let displayEffMarkup = effMarkup;
+        if (!log.isBase && !hasEffData) {
+            displayEffMarkup = `<span class="kml" style="color:var(--error); font-size:0.8rem;">שגיאת יחס</span>`;
+        }
+
         el.innerHTML = `
             <div class="log-date">
-                <span class="date">${dateString} ${typeBadge}</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="date">${dateString} ${typeBadge}</span>
+                    <button class="btn-text edit-btn" style="color:var(--accent-1); font-size:0.8rem;" aria-label="ערוך רשומה">ערוך ✏️</button>
+                </div>
                 <span class="values">${metricsMarkup}</span>
             </div>
             <div class="log-eff">
-                ${effMarkup}
+                ${displayEffMarkup}
             </div>
         `;
+
+        el.querySelector('.edit-btn').addEventListener('click', () => openEditModal(log.id));
         logList.appendChild(el);
     });
 }

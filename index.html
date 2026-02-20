@@ -79,6 +79,33 @@
                     <!-- Logs inserted here by JS -->
                 </div>
             </section>
+
+            <!-- Edit Modal -->
+            <dialog id="editModal" class="glass-panel">
+                <div class="modal-header">
+                    <h2 style="margin-bottom:0">עריכת רשומה</h2>
+                    <button type="button" class="btn-text" id="closeEditBtn" style="font-size:1.2rem">&times;</button>
+                </div>
+                <form id="editLogForm" style="margin-top:16px;">
+                    <input type="hidden" id="editLogId">
+                    <div class="input-group">
+                        <label for="editOdo">מד מרחק (ק"מ)</label>
+                        <input type="number" id="editOdo" step="0.1" required>
+                    </div>
+                    <div class="input-group" id="editFuelGroup">
+                        <label for="editFuel">דלק (ליטרים)</label>
+                        <input type="number" id="editFuel" step="0.01" required>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top:24px;">
+                        <span>שמור שינויים</span>
+                    </button>
+                    <button type="button" id="deleteLogBtn" class="btn-text btn-danger"
+                        style="margin-top:12px; align-self:center;">
+                        מחק רשומה זו
+                    </button>
+                </form>
+            </dialog>
+
         </main>
     </div>
 
