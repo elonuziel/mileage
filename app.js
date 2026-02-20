@@ -13,6 +13,8 @@ const STORAGE_KEY = 'mileageLogs';
 
 // DOM Elements
 const formContainer = document.getElementById('formContainer');
+const importCsvInput = document.getElementById('importCsvInput');
+const importDataBtn = document.getElementById('importDataBtn');
 const exportDataBtn = document.getElementById('exportDataBtn');
 const clearDataBtn = document.getElementById('clearDataBtn');
 const logList = document.getElementById('logList');
@@ -29,6 +31,8 @@ function init() {
     initChart();
     updateUI();
 
+    importDataBtn.addEventListener('click', () => importCsvInput.click());
+    importCsvInput.addEventListener('change', handleImportCSV);
     exportDataBtn.addEventListener('click', handleExportCSV);
     clearDataBtn.addEventListener('click', handleClearData);
 }
@@ -147,6 +151,73 @@ function handleClearData() {
     }
 }
 
+function handleImportCSV(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        const text = event.target.result;
+        parseCSV(text);
+
+        // Reset input so the same file can be selected again if needed
+        importCsvInput.value = '';
+    };
+    reader.readAsText(file);
+}
+
+function parseCSV(csvText) {
+    try {
+        const lines = csvText.split('\n').filter(l => l.trim() !== '');
+        if (lines.length < 2) throw new Error("File empty or missing header");
+
+        // Ensure header matches expected format loosely
+        const header = lines[0].toLowerCase();
+        if (!header.includes("odometer") || !header.includes("distance") || !header.includes("fuel")) {
+            throw new Error("CSV Header does not match correct format.");
+        }
+
+        const importedLogs = [];
+
+        // Parse rows
+        for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(',');
+            if (cols.length < 7) continue;
+
+            const dateParsed = Date.parse(cols[0]);
+            if (isNaN(dateParsed)) continue;
+
+            importedLogs.push({
+                id: Date.now() + i,
+                date: new Date(dateParsed).toISOString(),
+                odometer: parseFloat(cols[1]),
+                distance: parseFloat(cols[2]),
+                fuel: parseFloat(cols[3]),
+                l100km: parseFloat(cols[4]),
+                kmL: parseFloat(cols[5]),
+                isBase: cols[6].trim() === "Base Reading"
+            });
+        }
+
+        if (importedLogs.length > 0) {
+            // Sort merged array so newest is at the top ([0])
+            logs = [...logs, ...importedLogs].sort((a, b) => new Date(b.date) - new Date(a.date));
+            // Remove exact duplicates by ID (or just save the whole merged list)
+            const uniqueLogs = Array.from(new Map(logs.map(log => [log.id, log])).values());
+            logs = uniqueLogs;
+
+            saveLogs();
+            updateUI();
+            alert(`Successfully imported ${importedLogs.length} logs!`);
+        } else {
+            alert("No valid data rows found in CSV.");
+        }
+
+    } catch (err) {
+        alert("Error importing CSV: " + err.message);
+    }
+}
+
 function handleExportCSV() {
     if (logs.length === 0) {
         alert("No data to export.");
@@ -226,7 +297,7 @@ function renderList() {
         const typeBadge = log.isBase ? `<span style="font-size:0.7rem;background:rgba(0,0,0,0.05);padding:2px 6px;border-radius:4px;">Base</span>` : '';
         const effMarkup = log.isBase ?
             `<span class="l100">---</span>` :
-            `<span class="l100">${log.l100km} L/100</span><span class="kml">${log.kmL} km/L</span>`;
+            `<span class="l100" style="color:var(--accent-1); font-size:1.2rem; font-weight:700;">${log.kmL} km/L</span><span class="kml" style="opacity:0.6;">${log.l100km} L/100</span>`;
         const metricsMarkup = log.isBase ?
             `${log.odometer}km` :
             `${log.odometer}km • +${log.distance}km • ${log.fuel}L`;
@@ -260,15 +331,15 @@ function initChart() {
             labels: [],
             datasets: [
                 {
-                    label: 'L/100km',
+                    label: 'km/L',
                     data: [],
-                    borderColor: '#0072ff',
-                    backgroundColor: 'rgba(0, 114, 255, 0.1)',
+                    borderColor: '#00c6ff',
+                    backgroundColor: 'rgba(0, 198, 255, 0.1)',
                     borderWidth: 3,
                     tension: 0.4,
                     fill: true,
                     pointBackgroundColor: '#ffffff',
-                    pointBorderColor: '#0072ff',
+                    pointBorderColor: '#00c6ff',
                     pointBorderWidth: 2,
                     pointRadius: 4,
                     pointHoverRadius: 6,
@@ -327,10 +398,10 @@ function updateChart() {
         return new Date(l.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     });
 
-    const dataL100 = chronologicalLogs.map(l => l.l100km);
+    const dataKmL = chronologicalLogs.map(l => l.kmL);
 
     efficiencyChart.data.labels = labels;
-    efficiencyChart.data.datasets[0].data = dataL100;
+    efficiencyChart.data.datasets[0].data = dataKmL;
 
     efficiencyChart.update();
 }

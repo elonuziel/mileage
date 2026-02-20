@@ -39,12 +39,12 @@
         <main>
             <section class="glass-panel stat-overview">
                 <div class="stat-card">
-                    <span class="stat-label">Avg L/100km</span>
-                    <span class="stat-value" id="avgL100">-</span>
-                </div>
-                <div class="stat-card">
                     <span class="stat-label">Avg km/L</span>
                     <span class="stat-value" id="avgKmL">-</span>
+                </div>
+                <div class="stat-card" style="opacity: 0.6; transform: scale(0.95);">
+                    <span class="stat-label">Avg L/100km</span>
+                    <span class="stat-value" id="avgL100">-</span>
                 </div>
                 <div class="stat-card">
                     <span class="stat-label">Est. Total km</span>
@@ -69,7 +69,9 @@
                 <div class="list-header">
                     <h2>Recent Logs</h2>
                     <div class="header-actions">
-                        <button id="exportDataBtn" class="btn-text btn-outline">Export CSV</button>
+                        <input type="file" id="importCsvInput" accept=".csv" style="display: none;">
+                        <button id="importDataBtn" class="btn-text btn-outline">Import CSV</button>
+                        <button id="exportDataBtn" class="btn-text btn-outline">Export</button>
                         <button id="clearDataBtn" class="btn-text btn-danger">Clear All</button>
                     </div>
                 </div>
