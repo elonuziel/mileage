@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mileage Tracker</title>
-    <meta name="description" content="Offline vehicle mileage and fuel tracking application.">
+    <title>מעקב קילומטראז'</title>
+    <meta name="description" content="אפליקציה במצב לא מקוון למעקב אחר קילומטראז' ודלק.">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#f0f2f5">
     <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -31,23 +31,23 @@
                     </defs>
                     <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                 </svg>
-                <h1>Fuel<span class="gradient-text">Track</span></h1>
+                <h1>מעקב <span class="gradient-text">דלק</span></h1>
             </div>
-            <p class="subtitle">Mileage & Maintenance</p>
+            <p class="subtitle">קילומטראז' ותחזוקה</p>
         </header>
 
         <main>
             <section class="glass-panel stat-overview">
                 <div class="stat-card">
-                    <span class="stat-label">Avg km/L</span>
+                    <span class="stat-label">ממוצע ק"מ/ליטר</span>
                     <span class="stat-value" id="avgKmL">-</span>
                 </div>
                 <div class="stat-card" style="opacity: 0.6; transform: scale(0.95);">
-                    <span class="stat-label">Avg L/100km</span>
+                    <span class="stat-label">ממוצע ליטר/100 ק"מ</span>
                     <span class="stat-value" id="avgL100">-</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-label">Est. Total km</span>
+                    <span class="stat-label">סה"כ ק"מ משוער</span>
                     <span class="stat-value" id="totalKm">0</span>
                 </div>
             </section>
@@ -58,7 +58,7 @@
 
             <section class="glass-panel chart-section">
                 <div class="section-header">
-                    <h2>Efficiency Trends</h2>
+                    <h2>מגמות יעילות דלק</h2>
                 </div>
                 <div class="chart-container">
                     <canvas id="efficiencyChart"></canvas>
@@ -67,12 +67,12 @@
 
             <section class="glass-panel list-section">
                 <div class="list-header">
-                    <h2>Recent Logs</h2>
+                    <h2>רשומות אחרונות</h2>
                     <div class="header-actions">
                         <input type="file" id="importCsvInput" accept=".csv" style="display: none;">
-                        <button id="importDataBtn" class="btn-text btn-outline">Import CSV</button>
-                        <button id="exportDataBtn" class="btn-text btn-outline">Export</button>
-                        <button id="clearDataBtn" class="btn-text btn-danger">Clear All</button>
+                        <button id="importDataBtn" class="btn-text btn-outline">ייבא CSV</button>
+                        <button id="exportDataBtn" class="btn-text btn-outline">ייצא</button>
+                        <button id="clearDataBtn" class="btn-text btn-danger">נקה הכל</button>
                     </div>
                 </div>
                 <div class="log-list" id="logList">

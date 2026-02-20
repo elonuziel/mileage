@@ -44,15 +44,15 @@ function renderForm() {
     if (logs.length === 0) {
         // Render Initial Odometer Form
         formContainer.innerHTML = `
-            <h2>Setup Vehicle Profile</h2>
+            <h2>הגדרת פרופיל רכב</h2>
             <form id="baseLogForm">
                 <div class="input-group">
-                    <label for="baseOdo">Current Odometer (km)</label>
-                    <input type="number" id="baseOdo" step="0.1" required placeholder="e.g., 50000">
-                    <div class="helper-text">Establish your starting mileage. No fuel needed yet.</div>
+                    <label for="baseOdo">מד מרחק נוכחי (ק"מ)</label>
+                    <input type="number" id="baseOdo" step="0.1" required placeholder="לדוגמה, 50000">
+                    <div class="helper-text">קבע את הקילומטראז' ההתחלתי. עדיין אין צורך בדלק.</div>
                 </div>
                 <button type="submit" class="btn-primary">
-                    <span>Set Base Odometer</span>
+                    <span>הגדר מד מרחק התחלתי</span>
                 </button>
             </form>
         `;
@@ -61,19 +61,19 @@ function renderForm() {
         // Render Standard Refuel Form
         const lastOdo = logs[0].odometer;
         formContainer.innerHTML = `
-            <h2>Log Refueling</h2>
+            <h2>תיעוד תדלוק</h2>
             <form id="refuelLogForm">
                 <div class="input-group">
-                    <label for="currentOdo">Current Odometer (km)</label>
-                    <input type="number" id="currentOdo" step="0.1" required placeholder="Must be > ${lastOdo}">
-                    <div class="helper-text">Previous Odometer: ${lastOdo} km</div>
+                    <label for="currentOdo">מד מרחק נוכחי (ק"מ)</label>
+                    <input type="number" id="currentOdo" step="0.1" required placeholder="חייב להיות > ${lastOdo}">
+                    <div class="helper-text">מד מרחק קודם: ${lastOdo} ק"מ</div>
                 </div>
                 <div class="input-group">
-                    <label for="fuelAmt">Fuel Added (Liters)</label>
-                    <input type="number" id="fuelAmt" step="0.01" required placeholder="e.g., 40.2">
+                    <label for="fuelAmt">דלק שנוסף (ליטרים)</label>
+                    <input type="number" id="fuelAmt" step="0.01" required placeholder="לדוגמה, 40.2">
                 </div>
                 <button type="submit" class="btn-primary">
-                    <span>Save Refuel Log</span>
+                    <span>שמור תיעוד תדלוק</span>
                 </button>
             </form>
         `;
@@ -86,7 +86,7 @@ function handleSetBase(e) {
     const odo = parseFloat(document.getElementById('baseOdo').value);
 
     if (isNaN(odo) || odo < 0) {
-        alert("Please enter a valid positive odometer reading.");
+        alert("אנא הכנס קריאת מד מרחק חיובית ותקינה.");
         return;
     }
 
@@ -114,12 +114,12 @@ function handleRefuelLog(e) {
     const fuel = parseFloat(document.getElementById('fuelAmt').value);
 
     if (isNaN(currentOdo) || isNaN(fuel) || fuel <= 0) {
-        alert("Please enter valid numbers. Fuel must be positive.");
+        alert("אנא הכנס מספרים תקינים. כמות הדלק חייבת להיות חיובית.");
         return;
     }
 
     if (currentOdo <= lastLog.odometer) {
-        alert(`Odometer must be strictly greater than your previous reading (${lastLog.odometer} km).`);
+        alert(`מד המרחק חייב להיות גדול מהקריאה הקודמת שלך (${lastLog.odometer} ק"מ).`);
         return;
     }
 
@@ -144,7 +144,7 @@ function handleRefuelLog(e) {
 }
 
 function handleClearData() {
-    if (confirm("Are you sure you want to clear all data? This cannot be undone.")) {
+    if (confirm("האם אתה בטוח שברצונך לנקות את כל הנתונים? לא ניתן לבטל פעולה זו.")) {
         logs = [];
         saveLogs();
         updateUI();
@@ -169,12 +169,12 @@ function handleImportCSV(e) {
 function parseCSV(csvText) {
     try {
         const lines = csvText.split('\n').filter(l => l.trim() !== '');
-        if (lines.length < 2) throw new Error("File empty or missing header");
+        if (lines.length < 2) throw new Error("הקובץ ריק או שחסרה שורת כותרת");
 
         // Ensure header matches expected format loosely
         const header = lines[0].toLowerCase();
         if (!header.includes("odometer") || !header.includes("distance") || !header.includes("fuel")) {
-            throw new Error("CSV Header does not match correct format.");
+            throw new Error("כותרת ה-CSV אינה תואמת לפורמט התקין.");
         }
 
         const importedLogs = [];
@@ -208,19 +208,19 @@ function parseCSV(csvText) {
 
             saveLogs();
             updateUI();
-            alert(`Successfully imported ${importedLogs.length} logs!`);
+            alert(`יובאו בהצלחה ${importedLogs.length} רשומות!`);
         } else {
-            alert("No valid data rows found in CSV.");
+            alert("לא נמצאו שורות נתונים תקינות בקובץ ה-CSV.");
         }
 
     } catch (err) {
-        alert("Error importing CSV: " + err.message);
+        alert("שגיאה בייבוא CSV: " + err.message);
     }
 }
 
 function handleExportCSV() {
     if (logs.length === 0) {
-        alert("No data to export.");
+        alert("אין נתונים לייצוא.");
         return;
     }
 
@@ -284,23 +284,23 @@ function renderList() {
     logList.innerHTML = '';
 
     if (logs.length === 0) {
-        logList.innerHTML = '<div class="empty-state">No logs yet. Add your first entry above.</div>';
+        logList.innerHTML = '<div class="empty-state">אין רשומות עדיין. הוסף את הרשומה הראשונה למעלה.</div>';
         return;
     }
 
     logs.forEach(log => {
         const dateObj = new Date(log.date);
-        const dateString = dateObj.toLocaleDateString(undefined, {
+        const dateString = dateObj.toLocaleDateString('he-IL', {
             month: 'short', day: 'numeric', year: 'numeric'
         });
 
-        const typeBadge = log.isBase ? `<span style="font-size:0.7rem;background:rgba(0,0,0,0.05);padding:2px 6px;border-radius:4px;">Base</span>` : '';
+        const typeBadge = log.isBase ? `<span style="font-size:0.7rem;background:rgba(0,0,0,0.05);padding:2px 6px;border-radius:4px;">בסיס</span>` : '';
         const effMarkup = log.isBase ?
             `<span class="l100">---</span>` :
-            `<span class="l100" style="color:var(--accent-1); font-size:1.2rem; font-weight:700;">${log.kmL} km/L</span><span class="kml" style="opacity:0.6;">${log.l100km} L/100</span>`;
+            `<span class="l100" style="color:var(--accent-1); font-size:1.2rem; font-weight:700;">${log.kmL} ק"מ/ליטר</span><span class="kml" style="opacity:0.6;">${log.l100km} ליטר/100</span>`;
         const metricsMarkup = log.isBase ?
-            `${log.odometer}km` :
-            `${log.odometer}km • +${log.distance}km • ${log.fuel}L`;
+            `${log.odometer}ק"מ` :
+            `${log.odometer}ק"מ • +${log.distance}ק"מ • ${log.fuel}ליטר`;
 
         const el = document.createElement('div');
         el.className = 'log-item';
@@ -331,7 +331,7 @@ function initChart() {
             labels: [],
             datasets: [
                 {
-                    label: 'km/L',
+                    label: 'ק"מ/ליטר',
                     data: [],
                     borderColor: '#00c6ff',
                     backgroundColor: 'rgba(0, 198, 255, 0.1)',
@@ -395,7 +395,7 @@ function updateChart() {
     const chronologicalLogs = [...refuelLogs].reverse();
 
     const labels = chronologicalLogs.map(l => {
-        return new Date(l.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        return new Date(l.date).toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
     });
 
     const dataKmL = chronologicalLogs.map(l => l.kmL);
