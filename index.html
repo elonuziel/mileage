@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mileage Tracker</title>
+    <meta name="description" content="Offline vehicle mileage and fuel tracking application.">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#f0f2f5">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- PWA iOS Support -->
+    <link rel="apple-touch-icon" href="icon.svg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <div class="header-content">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#cyan-purple)" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <defs>
+                        <linearGradient id="cyan-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#0072ff" />
+                            <stop offset="100%" stop-color="#00c6ff" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+                <h1>Fuel<span class="gradient-text">Track</span></h1>
+            </div>
+            <p class="subtitle">Mileage & Maintenance</p>
+        </header>
+
+        <main>
+            <section class="glass-panel stat-overview">
+                <div class="stat-card">
+                    <span class="stat-label">Avg L/100km</span>
+                    <span class="stat-value" id="avgL100">-</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Avg km/L</span>
+                    <span class="stat-value" id="avgKmL">-</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Est. Total km</span>
+                    <span class="stat-value" id="totalKm">0</span>
+                </div>
+            </section>
+
+            <section class="glass-panel form-section" id="formContainer">
+                <!-- Dynamically injected via JS based on base odometer state -->
+            </section>
+
+            <section class="glass-panel chart-section">
+                <div class="section-header">
+                    <h2>Efficiency Trends</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="efficiencyChart"></canvas>
+                </div>
+            </section>
+
+            <section class="glass-panel list-section">
+                <div class="list-header">
+                    <h2>Recent Logs</h2>
+                    <div class="header-actions">
+                        <button id="exportDataBtn" class="btn-text btn-outline">Export CSV</button>
+                        <button id="clearDataBtn" class="btn-text btn-danger">Clear All</button>
+                    </div>
+                </div>
+                <div class="log-list" id="logList">
+                    <!-- Logs inserted here by JS -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="chart.js" defer></script>
+    <script src="app.js" defer></script>
+</body>
+
+</html>

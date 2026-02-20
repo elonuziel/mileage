@@ -1,0 +1,16 @@
+{
+  "name": "Mileage & Maintenance Tracker",
+  "short_name": "FuelTrack",
+  "description": "Offline vehicle mileage and fuel tracking application with visual efficiency graphing.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0c10",
+  "theme_color": "#12121e",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
