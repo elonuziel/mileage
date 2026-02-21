@@ -488,6 +488,10 @@ dialog::backdrop {
                     <span class="stat-label">סה"כ ק"מ משוער</span>
                     <span class="stat-value" id="totalKm">0</span>
                 </div>
+                <div class="stat-card" id="carComparisonCard" style="display:none;">
+                    <span class="stat-label">הפרש ממחשב רכב</span>
+                    <span class="stat-value" id="carDiff">-</span>
+                </div>
             </section>
 
             <section class="glass-panel form-section" id="formContainer">
@@ -527,6 +531,10 @@ dialog::backdrop {
                     <div class="input-group" id="editFuelGroup">
                         <label for="editFuel">דלק (ליטרים)</label>
                         <input type="number" id="editFuel" step="0.01" required>
+                    </div>
+                    <div class="input-group" id="editCarKmLGroup">
+                        <label for="editCarKmL">ק"מ/ליטר לפי מחשב הרכב (אופציונלי)</label>
+                        <input type="number" id="editCarKmL" step="0.1" placeholder="לדוגמה, 12.5">
                     </div>
                     <button type="submit" class="btn-primary" style="margin-top:24px;">
                         <span>שמור שינויים</span>

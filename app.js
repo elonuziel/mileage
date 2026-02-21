@@ -37,14 +37,18 @@ const editModal = document.getElementById('editModal');
 const editLogForm = document.getElementById('editLogForm');
 const editOdo = document.getElementById('editOdo');
 const editFuel = document.getElementById('editFuel');
+const editCarKmL = document.getElementById('editCarKmL');
 const editLogId = document.getElementById('editLogId');
 const closeEditBtn = document.getElementById('closeEditBtn');
 const deleteLogBtn = document.getElementById('deleteLogBtn');
 const editFuelGroup = document.getElementById('editFuelGroup');
+const editCarKmLGroup = document.getElementById('editCarKmLGroup');
 
 const elAvgL100 = document.getElementById('avgL100');
 const elAvgKmL = document.getElementById('avgKmL');
 const elTotalKm = document.getElementById('totalKm');
+const elCarDiff = document.getElementById('carDiff');
+const carComparisonCard = document.getElementById('carComparisonCard');
 
 // Chart Instance
 let efficiencyChart = null;
@@ -134,6 +138,11 @@ function renderForm() {
                     <label for="fuelAmt">דלק שנוסף (ליטרים)</label>
                     <input type="number" id="fuelAmt" step="0.01" required placeholder="לדוגמה, 40.2">
                 </div>
+                <div class="input-group">
+                    <label for="carKmL">ק"מ/ליטר לפי מחשב הרכב (אופציונלי)</label>
+                    <input type="number" id="carKmL" step="0.1" placeholder="לדוגמה, 12.5">
+                    <div class="helper-text">הזן את הממוצע שמציג מחשב הרכב בזמן התדלוק להשוואה</div>
+                </div>
                 <button type="submit" class="btn-primary">
                     <span>שמור תיעוד תדלוק</span>
                 </button>
@@ -174,6 +183,8 @@ function handleRefuelLog(e) {
     const lastLog = logs[0];
     const currentOdo = parseFloat(document.getElementById('currentOdo').value);
     const fuel = parseFloat(document.getElementById('fuelAmt').value);
+    const carKmLInput = document.getElementById('carKmL').value;
+    const carKmL = carKmLInput ? parseFloat(carKmLInput) : null;
 
     if (isNaN(currentOdo) || isNaN(fuel) || fuel <= 0) {
         alert("אנא הכנס מספרים תקינים. כמות הדלק חייבת להיות חיובית.");
@@ -182,6 +193,11 @@ function handleRefuelLog(e) {
 
     if (currentOdo <= lastLog.odometer) {
         alert(`מד המרחק חייב להיות גדול מהקריאה הקודמת שלך (${lastLog.odometer} ק"מ).`);
+        return;
+    }
+
+    if (carKmL !== null && (isNaN(carKmL) || carKmL <= 0)) {
+        alert("ק\"מ/ליטר של מחשב הרכב חייב להיות מספר חיובי.");
         return;
     }
 
@@ -197,6 +213,7 @@ function handleRefuelLog(e) {
         fuel: fuel,
         l100km: parseFloat(l100km.toFixed(2)),
         kmL: parseFloat(kmL.toFixed(2)),
+        carKmL: carKmL,
         isBase: false
     };
 
@@ -251,10 +268,14 @@ function openEditModal(id) {
         editFuelGroup.style.display = 'none';
         editFuel.removeAttribute('required');
         editFuel.value = '';
+        editCarKmLGroup.style.display = 'none';
+        editCarKmL.value = '';
     } else {
         editFuelGroup.style.display = 'flex';
         editFuel.setAttribute('required', 'true');
         editFuel.value = log.fuel;
+        editCarKmLGroup.style.display = 'flex';
+        editCarKmL.value = log.carKmL || '';
     }
 
     editModal.showModal();
@@ -281,6 +302,14 @@ function handleEditLogSubmit(e) {
             return;
         }
         log.fuel = newFuel;
+        
+        const carKmLInput = editCarKmL.value;
+        const carKmLValue = carKmLInput ? parseFloat(carKmLInput) : null;
+        if (carKmLValue !== null && (isNaN(carKmLValue) || carKmLValue <= 0)) {
+            alert("ק\"מ/ליטר של מחשב הרכב חייב להיות מספר חיובי.");
+            return;
+        }
+        log.carKmL = carKmLValue;
     }
 
     editModal.close();
@@ -344,6 +373,10 @@ function parseCSV(csvText) {
             const dateParsed = Date.parse(cols[0]);
             if (isNaN(dateParsed)) continue;
 
+            // Check if we have the 8th column (carKmL) - backward compatible
+            const carKmL = cols.length >= 8 && cols[6].trim() !== '' ? parseFloat(cols[6]) : null;
+            const typeCol = cols.length >= 8 ? cols[7] : cols[6];
+
             importedLogs.push({
                 id: Date.now() + i,
                 date: new Date(dateParsed).toISOString(),
@@ -352,7 +385,8 @@ function parseCSV(csvText) {
                 fuel: parseFloat(cols[3]),
                 l100km: parseFloat(cols[4]),
                 kmL: parseFloat(cols[5]),
-                isBase: cols[6].trim() === "Base Reading"
+                carKmL: carKmL,
+                isBase: typeCol.trim() === "Base Reading"
             });
         }
 
@@ -384,14 +418,15 @@ function handleExportCSV() {
     }
 
     let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Date,Odometer (km),Distance Driven (km),Fuel (L),L/100km,km/L,Type\n";
+    csvContent += "Date,Odometer (km),Distance Driven (km),Fuel (L),L/100km,km/L,Car km/L,Type\n";
 
     // Export in chronological order (oldest first)
     const exportLogs = [...logs].reverse();
 
     exportLogs.forEach(row => {
         const typeStr = row.isBase ? "Base Reading" : "Refuel";
-        const rowStr = `${new Date(row.date).toLocaleDateString()},${row.odometer},${row.distance},${row.fuel},${row.l100km},${row.kmL},${typeStr}`;
+        const carKmLStr = row.carKmL || '';
+        const rowStr = `${new Date(row.date).toLocaleDateString()},${row.odometer},${row.distance},${row.fuel},${row.l100km},${row.kmL},${carKmLStr},${typeStr}`;
         csvContent += rowStr + "\n";
     });
 
@@ -547,6 +582,7 @@ function renderStats() {
         elAvgL100.textContent = '-';
         elAvgKmL.textContent = '-';
         elTotalKm.textContent = '0';
+        if (carComparisonCard) carComparisonCard.style.display = 'none';
         return;
     }
 
@@ -559,6 +595,22 @@ function renderStats() {
     elAvgL100.textContent = avgL100.toFixed(2);
     elAvgKmL.textContent = avgKmL.toFixed(2);
     elTotalKm.textContent = totalDistance.toFixed(1);
+    
+    // Calculate car comparison if we have car data
+    const logsWithCarData = refuelLogs.filter(l => l.carKmL);
+    if (logsWithCarData.length > 0 && carComparisonCard && elCarDiff) {
+        const avgCarKmL = logsWithCarData.reduce((sum, log) => sum + log.carKmL, 0) / logsWithCarData.length;
+        const diff = avgKmL - avgCarKmL;
+        const percentDiff = ((diff / avgCarKmL) * 100);
+        const diffSign = diff >= 0 ? '+' : '';
+        const diffColor = Math.abs(diff) < 0.2 ? 'var(--text-secondary)' : (diff > 0 ? 'var(--success)' : 'var(--error)');
+        
+        elCarDiff.textContent = `${diffSign}${diff.toFixed(2)}`;
+        elCarDiff.style.color = diffColor;
+        carComparisonCard.style.display = 'flex';
+    } else if (carComparisonCard) {
+        carComparisonCard.style.display = 'none';
+    }
 }
 
 function renderList() {
@@ -576,22 +628,50 @@ function renderList() {
         });
 
         const typeBadge = log.isBase ? `<span style="font-size:0.7rem;background:rgba(0,0,0,0.05);padding:2px 6px;border-radius:4px;">בסיס</span>` : '';
-        const effMarkup = log.isBase ?
-            `<span class="l100">---</span>` :
-            `<span class="l100" style="color:var(--accent-1); font-size:1.2rem; font-weight:700;">${log.kmL} ק"מ/ליטר</span><span class="kml" style="opacity:0.6;">${log.l100km} ליטר/100</span>`;
+        
+        let effMarkup = '';
+        if (log.isBase) {
+            effMarkup = `<span class="l100">---</span>`;
+        } else {
+            // Check if there's any efficiency data
+            const hasEffData = log.l100km > 0 || log.kmL > 0;
+            if (!hasEffData) {
+                effMarkup = `<span class="kml" style="color:var(--error); font-size:0.8rem;">שגיאת יחס</span>`;
+            } else if (log.carKmL) {
+                // Show comparison when car data exists
+                const diff = log.kmL - log.carKmL;
+                const percentDiff = ((diff / log.carKmL) * 100);
+                const diffSign = diff >= 0 ? '+' : '';
+                const diffColor = Math.abs(diff) < 0.2 ? 'var(--text-secondary)' : (diff > 0 ? 'var(--success)' : 'var(--error)');
+                const diffIcon = Math.abs(diff) < 0.2 ? '≈' : (diff > 0 ? '✅' : '⚠️');
+                
+                effMarkup = `
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:0.75rem; color:var(--text-secondary);">חישוב:</span>
+                            <span style="color:var(--accent-1); font-size:1.1rem; font-weight:700;">${log.kmL} ק"מ/ל</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:0.75rem; color:var(--text-secondary);">רכב:</span>
+                            <span style="color:var(--text-primary); font-size:1rem; font-weight:600;">${log.carKmL} ק"מ/ל</span>
+                        </div>
+                        <div style="font-size:0.8rem; color:${diffColor};">
+                            <span>${diffIcon} ${diffSign}${diff.toFixed(2)} (${diffSign}${percentDiff.toFixed(1)}%)</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // No car data, show regular display
+                effMarkup = `<span class="l100" style="color:var(--accent-1); font-size:1.2rem; font-weight:700;">${log.kmL} ק"מ/ליטר</span><span class="kml" style="opacity:0.6;">${log.l100km} ליטר/100</span>`;
+            }
+        }
+        
         const metricsMarkup = log.isBase ?
             `${log.odometer}ק"מ` :
             `${log.odometer}ק"מ • +${log.distance}ק"מ • ${log.fuel}ליטר`;
 
         const el = document.createElement('div');
         el.className = 'log-item';
-        // Check if there's any efficiency data, otherwise show simple view
-        const hasEffData = log.l100km > 0 || log.kmL > 0;
-
-        let displayEffMarkup = effMarkup;
-        if (!log.isBase && !hasEffData) {
-            displayEffMarkup = `<span class="kml" style="color:var(--error); font-size:0.8rem;">שגיאת יחס</span>`;
-        }
 
         el.innerHTML = `
             <div class="log-date">
@@ -602,7 +682,7 @@ function renderList() {
                 <span class="values">${metricsMarkup}</span>
             </div>
             <div class="log-eff">
-                ${displayEffMarkup}
+                ${effMarkup}
             </div>
         `;
 
@@ -625,7 +705,7 @@ function initChart() {
             labels: [],
             datasets: [
                 {
-                    label: 'ק"מ/ליטר',
+                    label: 'ק"מ/ליטר (חישוב)',
                     data: [],
                     borderColor: '#00c6ff',
                     backgroundColor: 'rgba(0, 198, 255, 0.1)',
@@ -638,6 +718,22 @@ function initChart() {
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     yAxisID: 'y'
+                },
+                {
+                    label: 'ק"מ/ליטר (מחשב רכב)',
+                    data: [],
+                    borderColor: '#ff9500',
+                    backgroundColor: 'rgba(255, 149, 0, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: false,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#ff9500',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    yAxisID: 'y',
+                    borderDash: [5, 5]
                 }
             ]
         },
@@ -650,7 +746,18 @@ function initChart() {
             },
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        padding: 10,
+                        font: {
+                            size: 11
+                        },
+                        usePointStyle: true
+                    }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 54, 0.9)',
@@ -693,9 +800,15 @@ function updateChart() {
     });
 
     const dataKmL = chronologicalLogs.map(l => l.kmL);
+    const dataCarKmL = chronologicalLogs.map(l => l.carKmL || null);
 
     efficiencyChart.data.labels = labels;
     efficiencyChart.data.datasets[0].data = dataKmL;
+    efficiencyChart.data.datasets[1].data = dataCarKmL;
+
+    // Check if we have any car data to show the second line
+    const hasCarData = dataCarKmL.some(v => v !== null);
+    efficiencyChart.data.datasets[1].hidden = !hasCarData;
 
     efficiencyChart.update();
 }
