@@ -10,8 +10,7 @@ if ('serviceWorker' in navigator) {
 // Data Management
 let logs = JSON.parse(localStorage.getItem('mileageLogs')) || [];
 const STORAGE_KEY = 'mileageLogs';
-const CORS_PROXY = 'https://corsproxy.io/?';
-const JSONBLOB_API = 'https://jsonblob.com/api/jsonBlob';
+const JSONBIN_API = 'https://api.jsonbin.io/v3/b';
 
 // DOM Elements
 const formContainer = document.getElementById('formContainer');
@@ -23,8 +22,15 @@ const logList = document.getElementById('logList');
 
 // Sync Elements
 const cloudBackupIdInput = document.getElementById('cloudBackupId');
+const cloudAccessKeyInput = document.getElementById('cloudAccessKey');
 const saveToCloudBtn = document.getElementById('saveToCloudBtn');
 const loadFromCloudBtn = document.getElementById('loadFromCloudBtn');
+
+// Settings Modal Elements
+const openSettingsBtn = document.getElementById('openSettingsBtn');
+const settingsModal = document.getElementById('settingsModal');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const toggleKeyVisibilityBtn = document.getElementById('toggleKeyVisibility');
 
 // Edit Modal Elements
 const editModal = document.getElementById('editModal');
@@ -62,12 +68,35 @@ function init() {
         if (savedCloudId) {
             cloudBackupIdInput.value = savedCloudId;
         }
+        const savedCloudKey = localStorage.getItem('mileageCloudAccessKey');
+        if (savedCloudKey) {
+            cloudAccessKeyInput.value = savedCloudKey;
+        }
     }
 
     // Modal listeners
     closeEditBtn.addEventListener('click', () => editModal.close());
     editLogForm.addEventListener('submit', handleEditLogSubmit);
     deleteLogBtn.addEventListener('click', handleDeleteLog);
+
+    // Settings listeners
+    if (openSettingsBtn) {
+        openSettingsBtn.addEventListener('click', () => settingsModal.showModal());
+        closeSettingsBtn.addEventListener('click', () => settingsModal.close());
+
+        const eyeIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        const eyeOffIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+        toggleKeyVisibilityBtn.addEventListener('click', () => {
+            if (cloudAccessKeyInput.type === 'password') {
+                cloudAccessKeyInput.type = 'text';
+                toggleKeyVisibilityBtn.innerHTML = eyeOffIcon;
+            } else {
+                cloudAccessKeyInput.type = 'password';
+                toggleKeyVisibilityBtn.innerHTML = eyeIcon;
+            }
+        });
+    }
 }
 
 // Global Form Handlers are attached dynamically on render
@@ -387,24 +416,51 @@ async function handleSaveToCloud() {
     }
 
     const backupId = cloudBackupIdInput.value.trim();
-    if (!backupId) {
-        alert("אנא הכנס מזהה גיבוי (Backup ID) כדי לשמור נתונים.");
+    const accessKey = cloudAccessKeyInput.value.trim();
+
+    if (!accessKey) {
+        alert("אנא הכנס מפתח גישה (X-Access-Key). מזהה גיבוי (Bin ID) נחוץ רק לעדכון גיבוי קיים.");
         return;
     }
-
 
     saveToCloudBtn.disabled = true;
     saveToCloudBtn.innerHTML = '<span>שומר...</span>';
 
     try {
-        const res = await fetch(`${CORS_PROXY}${encodeURIComponent(JSONBLOB_API + '/' + backupId)}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+        let url = JSONBIN_API;
+        let method = 'POST'; // Default to creating a new Bin
+
+        if (backupId) {
+            url = `${JSONBIN_API}/${backupId}`;
+            method = 'PUT'; // Update existing Bin
+        }
+
+        const res = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Access-Key': accessKey,
+                'X-Bin-Name': 'MileageTrackerBackup' // Optional name for the bin
+            },
             body: JSON.stringify(logs)
         });
-        if (!res.ok) throw new Error("שגיאה בעדכון הגיבוי. בדוק את המזהה.");
-        localStorage.setItem('mileageCloudBackupId', backupId);
-        alert("הנתונים עודכנו בענן בהצלחה!");
+
+        if (!res.ok) throw new Error("שגיאה בפעולת הגיבוי. בדוק את המזהה ואת מפתח הגישה.");
+
+        const data = await res.json();
+
+        let savedBinId = backupId;
+        if (method === 'POST') {
+            // JSONBin returns the new ID in data.metadata.id
+            savedBinId = data.metadata.id;
+            cloudBackupIdInput.value = savedBinId;
+            alert(`גיבוי חדש נוצר בהצלחה!\nמזהה ה-Bin החדש שלך הוא: \n\n${savedBinId}\n\nהוא נשמר אוטומטית בהגדרות.`);
+        } else {
+            alert("הנתונים עודכנו בענן בהצלחה!");
+        }
+
+        localStorage.setItem('mileageCloudBackupId', savedBinId);
+        localStorage.setItem('mileageCloudAccessKey', accessKey);
     } catch (err) {
         if (err.message === 'Failed to fetch') {
             alert("שגיאת רשת: לא ניתן להתחבר לשרת הגיבוי.\n\nבדוק את חיבור האינטרנט שלך.");
@@ -419,8 +475,9 @@ async function handleSaveToCloud() {
 
 async function handleLoadFromCloud() {
     const backupId = cloudBackupIdInput.value.trim();
-    if (!backupId) {
-        alert("אנא הכנס מזהה גיבוי (Backup ID) כדי לטעון נתונים.");
+    const accessKey = cloudAccessKeyInput.value.trim();
+    if (!backupId || !accessKey) {
+        alert("אנא הכנס מזהה גיבוי (Bin ID) ומפתח גישה (X-Access-Key) כדי לטעון נתונים.");
         return;
     }
 
@@ -429,13 +486,19 @@ async function handleLoadFromCloud() {
     loadFromCloudBtn.textContent = 'טוען...';
 
     try {
-        const res = await fetch(`${CORS_PROXY}${encodeURIComponent(JSONBLOB_API + '/' + backupId)}`);
+        const res = await fetch(`${JSONBIN_API}/${backupId}`, {
+            headers: {
+                'X-Access-Key': accessKey
+            }
+        });
         if (!res.ok) {
             if (res.status === 404) throw new Error("גיבוי לא נמצא. בדוק את המזהה שלך.");
+            if (res.status === 401 || res.status === 403) throw new Error("מפתח הגישה אינו חוקי או שאין לו הרשאות מתאימות.");
             throw new Error("שגיאה בטעינת נתונים מחשבון הענן.");
         }
 
-        const importedLogs = await res.json();
+        const json = await res.json();
+        const importedLogs = json.record;
 
         if (!Array.isArray(importedLogs)) {
             throw new Error("הנתונים בענן אינם תקינים.");

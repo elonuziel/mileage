@@ -2,10 +2,10 @@
 
 Here are the best options for adding online/cloud backup to the frontend-only Mileage Tracker, ranging from simple to more advanced:
 
-## 1. Simple JSON API (e.g., JsonBlob or JSONBin.io)
-**How it works:** Save the app's entire data (which is currently in `localStorage`) to a unique URL on a free JSON hosting service. You get a unique "Backup ID" to load your data anywhere.
-* **Pros:** Extremely fast to set up, no complex login required, free.
-* **Cons:** Anyone with the ID can access the data, so it's not meant for highly sensitive information.
+## 1. Simple JSON API (e.g., JSONBin.io or JsonBlob)
+**How it works:** Save the app's entire data (which is currently in `localStorage`) to a unique URL on a free JSON hosting service. You get a unique "Bin ID" and "X-Access-Key" to load your data anywhere.
+* **Pros:** Extremely fast to set up, customizable privacy, free.
+* **Cons:** Anyone with the ID and Key can access the data, so it's not meant for highly sensitive information.
 * **Good for:** Quick, easy backups for personal use.
 
 ## 2. Google Sheets API
