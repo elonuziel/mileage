@@ -15,7 +15,7 @@ A lightweight, privacy-first Progressive Web Application (PWA) to track vehicle 
 
 You have two options to run FuelTrack locally:
 
-### 1. Full PWA Edition (Recommended)
+### 1. Full PWA Edition
 This version includes Chart.js, a Service Worker for offline support, and a complete directory structure.
 
 1. Clone or download the repository.
@@ -23,7 +23,7 @@ This version includes Chart.js, a Service Worker for offline support, and a comp
 3. Access it in your browser.
 4. Select **"Add to Home Screen"** or **"Install App"** via your browser's menu for the full offline experience.
 
-### 2. Standalone Edition
+### 2. Standalone Edition (Recommended for ease-of-use)
 A single-file version of the application that requires no local web server.
 
 1. Clone or download the repository.
