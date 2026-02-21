@@ -8,6 +8,7 @@ A lightweight, privacy-first Progressive Web Application (PWA) to track vehicle 
 - **Smart Tracking**: Calculates distance and efficiency (km/L, L/100km) between readings.
 - **Interactive Charts**: Visualize fuel consumption trends over time.
 - **Easy Backup**: Export and import your data via CSV.
+- **Cloud Backup**: Save and load your data to the cloud for free using JsonBlob.
 - **Hebrew Support**: Full RTL localization.
 
 ## Getting Started

@@ -80,6 +80,43 @@
                 </div>
             </section>
 
+            <section class="glass-panel sync-section">
+                <div class="section-header">
+                    <h2>גיבוי ענן (JsonBlob)</h2>
+                </div>
+                <div class="helper-text" style="margin-bottom: 20px; line-height: 1.6;">
+                    שמור את הנתונים שלך בענן בחינם! כדי להתחיל:
+                    <ol style="margin-top: 8px; margin-right: 24px; padding-right: 0;">
+                        <li>היכנס לאתר <a href="https://jsonblob.com" target="_blank"
+                                style="color: var(--accent-1); text-decoration: none; font-weight: 600;">JsonBlob.com</a>.
+                        </li>
+                        <li>לחץ על כפתור <strong>Save</strong> כדי ליצור מסמך חדש.</li>
+                        <li>העתק את המזהה מהכתובת (למשל: <code>1234567890</code> מתוך
+                            <code>jsonblob.com/1234567890</code>).
+                        </li>
+                        <li>הדבק את המזהה למטה ולחץ "שמור לענן".</li>
+                    </ol>
+                    <p style="margin-top: 10px; color: var(--error); font-weight: 600; font-size: 0.8rem;">
+                        ⚠️ שים לב: JsonBlob מוחק גיבויים שלא ניגשים אליהם במשך 75 יום. הקפד לשמור או לטעון לפחות פעם
+                        בחודשיים.
+                    </p>
+                </div>
+                <div class="sync-controls">
+                    <div class="input-group">
+                        <label for="cloudBackupId">מזהה גיבוי (Backup ID)</label>
+                        <input type="text" id="cloudBackupId" placeholder="הדבק כאן את המזהה מ-JsonBlob.com">
+                    </div>
+                    <div class="sync-actions" style="margin-top: 12px; display: flex; gap: 12px;">
+                        <button id="saveToCloudBtn" class="btn-primary" style="flex: 1; margin-top: 0;">
+                            <span>שמור לענן</span>
+                        </button>
+                        <button id="loadFromCloudBtn" class="btn-outline btn-text"
+                            style="flex: 1; border: 1px solid var(--accent-1); border-radius: var(--radius-sm); padding: 12px;">טען
+                            מענן</button>
+                    </div>
+                </div>
+            </section>
+
             <!-- Edit Modal -->
             <dialog id="editModal" class="glass-panel">
                 <div class="modal-header">

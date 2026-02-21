@@ -232,6 +232,17 @@ input::placeholder {
     margin-bottom: 0;
 }
 
+/* Sync Section */
+.sync-section {
+    margin-top: 24px;
+}
+
+.sync-actions button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 /* Modals */
 dialog {
     margin: auto;

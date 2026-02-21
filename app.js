@@ -10,6 +10,8 @@ if ('serviceWorker' in navigator) {
 // Data Management
 let logs = JSON.parse(localStorage.getItem('mileageLogs')) || [];
 const STORAGE_KEY = 'mileageLogs';
+const CORS_PROXY = 'https://corsproxy.io/?';
+const JSONBLOB_API = 'https://jsonblob.com/api/jsonBlob';
 
 // DOM Elements
 const formContainer = document.getElementById('formContainer');
@@ -18,6 +20,11 @@ const importDataBtn = document.getElementById('importDataBtn');
 const exportDataBtn = document.getElementById('exportDataBtn');
 const clearDataBtn = document.getElementById('clearDataBtn');
 const logList = document.getElementById('logList');
+
+// Sync Elements
+const cloudBackupIdInput = document.getElementById('cloudBackupId');
+const saveToCloudBtn = document.getElementById('saveToCloudBtn');
+const loadFromCloudBtn = document.getElementById('loadFromCloudBtn');
 
 // Edit Modal Elements
 const editModal = document.getElementById('editModal');
@@ -45,6 +52,17 @@ function init() {
     importCsvInput.addEventListener('change', handleImportCSV);
     exportDataBtn.addEventListener('click', handleExportCSV);
     clearDataBtn.addEventListener('click', handleClearData);
+
+    // Sync listeners
+    if (saveToCloudBtn) {
+        saveToCloudBtn.addEventListener('click', handleSaveToCloud);
+        loadFromCloudBtn.addEventListener('click', handleLoadFromCloud);
+
+        const savedCloudId = localStorage.getItem('mileageCloudBackupId');
+        if (savedCloudId) {
+            cloudBackupIdInput.value = savedCloudId;
+        }
+    }
 
     // Modal listeners
     closeEditBtn.addEventListener('click', () => editModal.close());
@@ -360,6 +378,94 @@ function handleExportCSV() {
 
 function saveLogs() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+}
+
+async function handleSaveToCloud() {
+    if (logs.length === 0) {
+        alert("אין נתונים לשמירה.");
+        return;
+    }
+
+    const backupId = cloudBackupIdInput.value.trim();
+    if (!backupId) {
+        alert("אנא הכנס מזהה גיבוי (Backup ID) כדי לשמור נתונים.");
+        return;
+    }
+
+
+    saveToCloudBtn.disabled = true;
+    saveToCloudBtn.innerHTML = '<span>שומר...</span>';
+
+    try {
+        const res = await fetch(`${CORS_PROXY}${encodeURIComponent(JSONBLOB_API + '/' + backupId)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(logs)
+        });
+        if (!res.ok) throw new Error("שגיאה בעדכון הגיבוי. בדוק את המזהה.");
+        localStorage.setItem('mileageCloudBackupId', backupId);
+        alert("הנתונים עודכנו בענן בהצלחה!");
+    } catch (err) {
+        if (err.message === 'Failed to fetch') {
+            alert("שגיאת רשת: לא ניתן להתחבר לשרת הגיבוי.\n\nבדוק את חיבור האינטרנט שלך.");
+        } else {
+            alert(err.message);
+        }
+    } finally {
+        saveToCloudBtn.disabled = false;
+        saveToCloudBtn.innerHTML = '<span>שמור לענן</span>';
+    }
+}
+
+async function handleLoadFromCloud() {
+    const backupId = cloudBackupIdInput.value.trim();
+    if (!backupId) {
+        alert("אנא הכנס מזהה גיבוי (Backup ID) כדי לטעון נתונים.");
+        return;
+    }
+
+
+    loadFromCloudBtn.disabled = true;
+    loadFromCloudBtn.textContent = 'טוען...';
+
+    try {
+        const res = await fetch(`${CORS_PROXY}${encodeURIComponent(JSONBLOB_API + '/' + backupId)}`);
+        if (!res.ok) {
+            if (res.status === 404) throw new Error("גיבוי לא נמצא. בדוק את המזהה שלך.");
+            throw new Error("שגיאה בטעינת נתונים מחשבון הענן.");
+        }
+
+        const importedLogs = await res.json();
+
+        if (!Array.isArray(importedLogs)) {
+            throw new Error("הנתונים בענן אינם תקינים.");
+        }
+
+        if (importedLogs.length > 0) {
+            if (confirm(`נמצאו ${importedLogs.length} רשומות בענן. האם למזג אותן עם הנתונים הקיימים שלך? (כן = למזג, לא = להחליף לגמרי)`)) {
+                logs = [...logs, ...importedLogs];
+                // Remove exact duplicates by ID
+                const uniqueLogs = Array.from(new Map(logs.map(log => [log.id, log])).values());
+                logs = uniqueLogs;
+            } else {
+                logs = importedLogs;
+            }
+
+            localStorage.setItem('mileageCloudBackupId', backupId);
+            recalculateLogs();
+            saveLogs();
+            updateUI();
+            alert("הנתונים נטענו בהצלחה!");
+        } else {
+            alert("אין רשומות בגיבוי זה.");
+        }
+
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        loadFromCloudBtn.disabled = false;
+        loadFromCloudBtn.textContent = 'טען מענן';
+    }
 }
 
 // UI Updates
