@@ -515,6 +515,10 @@
                 <form id="editLogForm" style="margin-top:16px;">
                     <input type="hidden" id="editLogId">
                     <div class="input-group">
+                        <label for="editDate">תאריך</label>
+                        <input type="date" id="editDate" required>
+                    </div>
+                    <div class="input-group">
                         <label for="editOdo">מד מרחק (ק"מ)</label>
                         <input type="number" id="editOdo" step="0.1" required>
                     </div>
@@ -669,6 +673,7 @@
     const editLogForm = document.getElementById('editLogForm');
     const editOdo = document.getElementById('editOdo');
     const editFuel = document.getElementById('editFuel');
+    const editDate = document.getElementById('editDate');
     const editCarKmL = document.getElementById('editCarKmL');
     const editLogId = document.getElementById('editLogId');
     const closeEditBtn = document.getElementById('closeEditBtn');
@@ -916,6 +921,12 @@
         editLogId.value = log.id;
         editOdo.value = log.odometer;
 
+        // Format date for date input (YYYY-MM-DD)
+        const logDate = new Date(log.date);
+        const tzOffset = logDate.getTimezoneOffset() * 60000;
+        const localISODate = (new Date(logDate - tzOffset)).toISOString().slice(0, 10);
+        editDate.value = localISODate;
+
         if (log.isBase) {
             editFuelGroup.style.display = 'none';
             editFuel.removeAttribute('required');
@@ -938,6 +949,16 @@
         const id = parseInt(editLogId.value);
         const log = logs.find(l => l.id === id);
         if (!log) return;
+
+        const newDateStr = editDate.value;
+        if (!newDateStr) {
+            alert("אנא הכנס תאריך תקין.");
+            return;
+        }
+
+        // Preserve the original time portion of the ISO string
+        const originalTime = log.date.substring(10); // gets "T14:30:00.000Z"
+        log.date = newDateStr + originalTime;
 
         const newOdo = parseFloat(editOdo.value);
         if (isNaN(newOdo) || newOdo < 0) {

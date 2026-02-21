@@ -40,6 +40,7 @@ const editModal = document.getElementById('editModal');
 const editLogForm = document.getElementById('editLogForm');
 const editOdo = document.getElementById('editOdo');
 const editFuel = document.getElementById('editFuel');
+const editDate = document.getElementById('editDate');
 const editCarKmL = document.getElementById('editCarKmL');
 const editLogId = document.getElementById('editLogId');
 const closeEditBtn = document.getElementById('closeEditBtn');
@@ -98,7 +99,7 @@ function init() {
             }
         });
         closeSettingsBtn.addEventListener('click', () => settingsModal.close());
-        
+
         // Unit preference change listeners
         if (unitKmLRadio && unitL100kmRadio) {
             unitKmLRadio.addEventListener('change', handleUnitChange);
@@ -287,6 +288,12 @@ function openEditModal(id) {
     editLogId.value = log.id;
     editOdo.value = log.odometer;
 
+    // Format date for date input (YYYY-MM-DD)
+    const logDate = new Date(log.date);
+    const tzOffset = logDate.getTimezoneOffset() * 60000;
+    const localISODate = (new Date(logDate - tzOffset)).toISOString().slice(0, 10);
+    editDate.value = localISODate;
+
     if (log.isBase) {
         editFuelGroup.style.display = 'none';
         editFuel.removeAttribute('required');
@@ -310,6 +317,16 @@ function handleEditLogSubmit(e) {
     const log = logs.find(l => l.id === id);
     if (!log) return;
 
+    const newDateStr = editDate.value;
+    if (!newDateStr) {
+        alert("אנא הכנס תאריך תקין.");
+        return;
+    }
+
+    // Preserve the original time portion of the ISO string
+    const originalTime = log.date.substring(10); // gets "T14:30:00.000Z"
+    log.date = newDateStr + originalTime;
+
     const newOdo = parseFloat(editOdo.value);
     if (isNaN(newOdo) || newOdo < 0) {
         alert("אנא הכנס קריאת מד מרחק תקינה.");
@@ -325,7 +342,7 @@ function handleEditLogSubmit(e) {
             return;
         }
         log.fuel = newFuel;
-        
+
         const carKmLInput = editCarKmL.value;
         const carKmLValue = carKmLInput ? parseFloat(carKmLInput) : null;
         if (carKmLValue !== null && (isNaN(carKmLValue) || carKmLValue <= 0)) {
@@ -632,7 +649,7 @@ function renderStats() {
     elAvgL100.textContent = avgL100.toFixed(2);
     elAvgKmL.textContent = avgKmL.toFixed(2);
     elTotalKm.textContent = totalDistance.toFixed(1);
-    
+
     // Calculate car comparison if we have car data
     const logsWithCarData = refuelLogs.filter(l => l.carKmL);
     if (logsWithCarData.length > 0 && carComparisonCard && elCarDiff) {
@@ -641,7 +658,7 @@ function renderStats() {
         const percentDiff = ((diff / avgCarKmL) * 100);
         const diffSign = diff >= 0 ? '+' : '';
         const diffColor = Math.abs(diff) < 0.2 ? 'var(--text-secondary)' : (diff > 0 ? 'var(--success)' : 'var(--error)');
-        
+
         elCarDiff.textContent = `${diffSign}${diff.toFixed(2)}`;
         elCarDiff.style.color = diffColor;
         carComparisonCard.style.display = 'flex';
@@ -665,7 +682,7 @@ function renderList() {
         });
 
         const typeBadge = log.isBase ? `<span style="font-size:0.7rem;background:rgba(0,0,0,0.05);padding:2px 6px;border-radius:4px;">בסיס</span>` : '';
-        
+
         let effMarkup = '';
         if (log.isBase) {
             effMarkup = `<span class="l100">---</span>`;
@@ -677,7 +694,7 @@ function renderList() {
             } else if (log.carKmL) {
                 // Show comparison when car data exists
                 let calcValue, carValue, diff, percentDiff, unit;
-                
+
                 if (unitPreference === 'l100km') {
                     calcValue = log.l100km;
                     // Convert car kmL to l100km
@@ -692,12 +709,12 @@ function renderList() {
                     percentDiff = ((diff / carValue) * 100);
                     unit = 'ק"מ/ל';
                 }
-                
+
                 const diffSign = diff >= 0 ? '+' : '';
                 const tolerance = unitPreference === 'l100km' ? 0.2 : 0.2;
                 const diffColor = Math.abs(diff) < tolerance ? 'var(--text-secondary)' : (diff > 0 ? 'var(--success)' : 'var(--error)');
                 const diffIcon = Math.abs(diff) < tolerance ? '≈' : (diff > 0 ? '✅' : '⚠️');
-                
+
                 effMarkup = `
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
                         <div style="display:flex; align-items:center; gap:8px;">
@@ -722,7 +739,7 @@ function renderList() {
                 }
             }
         }
-        
+
         const metricsMarkup = log.isBase ?
             `${log.odometer}ק"מ` :
             `${log.odometer}ק"מ • +${log.distance}ק"מ • ${log.fuel}ליטר`;
