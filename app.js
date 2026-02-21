@@ -598,6 +598,20 @@ function updateUI() {
 }
 
 function renderStats() {
+    if (elAvgKmL && elAvgKmL.parentElement) {
+        const cardAvgKmL = elAvgKmL.parentElement;
+        const cardAvgL100 = elAvgL100.parentElement;
+        if (unitPreference === 'l100km') {
+            cardAvgKmL.style.display = 'none';
+            cardAvgL100.style.display = 'flex';
+            cardAvgL100.style.opacity = '1';
+            cardAvgL100.style.transform = 'none';
+        } else {
+            cardAvgKmL.style.display = 'flex';
+            cardAvgL100.style.display = 'none';
+        }
+    }
+
     // Need at least one refuel log to calculate averages
     const refuelLogs = logs.filter(l => !l.isBase);
 
@@ -702,9 +716,9 @@ function renderList() {
             } else {
                 // No car data, show regular display based on unit preference
                 if (unitPreference === 'l100km') {
-                    effMarkup = `<span class="l100" style="color:var(--accent-1); font-size:1.2rem; font-weight:700;">${log.l100km} ליטר/100</span><span class="kml" style="opacity:0.6;">${log.kmL} ק"מ/ליטר</span>`;
+                    effMarkup = `<span class="l100" style="color:var(--accent-1); font-size:1.2rem; font-weight:700;">${log.l100km} ליטר/100</span>`;
                 } else {
-                    effMarkup = `<span class="l100" style="color:var(--accent-1); font-size:1.2rem; font-weight:700;">${log.kmL} ק"מ/ליטר</span><span class="kml" style="opacity:0.6;">${log.l100km} ליטר/100</span>`;
+                    effMarkup = `<span class="l100" style="color:var(--accent-1); font-size:1.2rem; font-weight:700;">${log.kmL} ק"מ/ליטר</span>`;
                 }
             }
         }

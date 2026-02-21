@@ -122,9 +122,14 @@
                 <section class="settings-section" style="margin-top: 16px;">
                     <h3 style="font-size: 1.1rem; margin-bottom: 12px;">גיבוי ענן (JSONBin.io)</h3>
                     <div class="helper-text" style="margin-bottom: 16px; line-height: 1.5;">
-                        האתר JSONBin.io מאפשר אחסון JSON בחינם. הכנס את <strong>X-Access-Key</strong> שלך, ולחץ "שמור
+                        האתר <a href="https://jsonbin.io" target="_blank"
+                            style="color: var(--accent-1); text-decoration: underline;">JSONBin.io</a> מאפשר אחסון JSON
+                        בחינם. הכנס את <strong>X-Access-Key</strong> שלך, ולחץ "שמור
                         לענן" כדי ליצור אוטומטית מקום אחסון (Bin) חדש לנתונים שלך, או הכנס גם <strong>Bin ID</strong>
-                        כדי לעדכן גיבוי קיים.
+                        כדי לעדכן גיבוי קיים.<br><br>
+                        <strong style="color: var(--error);">חשוב: שמור את מפתח הגישה ואת מזהה הגיבוי (Bin ID) במקום
+                            בטוח!</strong> הנתונים מקושרים אליהם באופן בלעדי. בלעדיהם לא תוכל לשחזר את הגיבוי שלך בעתיד
+                        במידה והאפליקציה תימחק.
                     </div>
 
                     <div class="input-group">
@@ -155,6 +160,25 @@
                         <button id="loadFromCloudBtn" class="btn-outline btn-text"
                             style="flex: 1; border: 1px solid var(--accent-1); border-radius: var(--radius-sm); padding: 12px;">טען
                             מענן</button>
+                    </div>
+                </section>
+
+                <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 24px 0;">
+
+                <section class="settings-section">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 12px;">העדפות תצוגה</h3>
+                    <div class="input-group">
+                        <label>יחידת מדידה ליעילות דלק</label>
+                        <div style="display: flex; gap: 16px; margin-top: 8px;">
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="unitPreference" value="kmL" id="unitKmL" checked>
+                                <span>ק"מ/ליטר</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="unitPreference" value="l100km" id="unitL100km">
+                                <span>ליטר/100 ק"מ</span>
+                            </label>
+                        </div>
                     </div>
                 </section>
 
