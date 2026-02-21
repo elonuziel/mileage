@@ -13,14 +13,21 @@ A lightweight, privacy-first Progressive Web Application (PWA) to track vehicle 
 
 ## Getting Started
 
-### Quick Install (Mobile/Desktop)
-1. Download [**FuelTrack_App.zip**](FuelTrack_App.zip) and extract its contents.
-2. Open `index.html` in your browser.
-3. Select **"Add to Home Screen"** or **"Install App"** via your browser's menu for the full offline experience.
+You have two options to run FuelTrack locally:
 
-### Developer Setup
-1. Clone the repository.
-2. Open `index.html` in any modern web browser.
+### 1. Full PWA Edition (Recommended)
+This version includes Chart.js, a Service Worker for offline support, and a complete directory structure.
+
+1. Clone or download the repository.
+2. Serve the `app/` directory using a local web server (e.g., `npx http-server app/` or via a live server extension).
+3. Access it in your browser.
+4. Select **"Add to Home Screen"** or **"Install App"** via your browser's menu for the full offline experience.
+
+### 2. Standalone Edition
+A single-file version of the application that requires no local web server.
+
+1. Clone or download the repository.
+2. Open `mileage_standalone.html` directly in any modern web browser.
 
 ## Built With
 - Vanilla HTML/CSS/JavaScript
