@@ -596,6 +596,25 @@ dialog::backdrop {
                 <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 24px 0;">
 
                 <section class="settings-section">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 12px;">העדפות תצוגה</h3>
+                    <div class="input-group">
+                        <label>יחידת מדידה ליעילות דלק</label>
+                        <div style="display: flex; gap: 16px; margin-top: 8px;">
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="unitPreference" value="kmL" id="unitKmL" checked>
+                                <span>ק"מ/ליטר</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="unitPreference" value="l100km" id="unitL100km">
+                                <span>ליטר/100 ק"מ</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 24px 0;">
+
+                <section class="settings-section">
                     <h3 style="font-size: 1.1rem; margin-bottom: 12px;">ניהול נתונים מקומי</h3>
                     <div style="display: flex; flex-direction: column; gap: 12px;">
                         <input type="file" id="importCsvInput" accept=".csv" style="display: none;">

@@ -11,6 +11,7 @@ if ('serviceWorker' in navigator) {
 let logs = JSON.parse(localStorage.getItem('mileageLogs')) || [];
 const STORAGE_KEY = 'mileageLogs';
 const JSONBIN_API = 'https://api.jsonbin.io/v3/b';
+let unitPreference = localStorage.getItem('unitPreference') || 'kmL'; // 'kmL' or 'l100km'
 
 // DOM Elements
 const formContainer = document.getElementById('formContainer');
@@ -31,6 +32,8 @@ const openSettingsBtn = document.getElementById('openSettingsBtn');
 const settingsModal = document.getElementById('settingsModal');
 const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 const toggleKeyVisibilityBtn = document.getElementById('toggleKeyVisibility');
+const unitKmLRadio = document.getElementById('unitKmL');
+const unitL100kmRadio = document.getElementById('unitL100km');
 
 // Edit Modal Elements
 const editModal = document.getElementById('editModal');
@@ -85,8 +88,22 @@ function init() {
 
     // Settings listeners
     if (openSettingsBtn) {
-        openSettingsBtn.addEventListener('click', () => settingsModal.showModal());
+        openSettingsBtn.addEventListener('click', () => {
+            settingsModal.showModal();
+            // Load current unit preference
+            if (unitPreference === 'l100km') {
+                unitL100kmRadio.checked = true;
+            } else {
+                unitKmLRadio.checked = true;
+            }
+        });
         closeSettingsBtn.addEventListener('click', () => settingsModal.close());
+        
+        // Unit preference change listeners
+        if (unitKmLRadio && unitL100kmRadio) {
+            unitKmLRadio.addEventListener('change', handleUnitChange);
+            unitL100kmRadio.addEventListener('change', handleUnitChange);
+        }
 
         const eyeIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
         const eyeOffIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
@@ -101,6 +118,12 @@ function init() {
             }
         });
     }
+}
+
+function handleUnitChange(e) {
+    unitPreference = e.target.value;
+    localStorage.setItem('unitPreference', unitPreference);
+    updateUI();
 }
 
 // Global Form Handlers are attached dynamically on render
@@ -639,21 +662,37 @@ function renderList() {
                 effMarkup = `<span class="kml" style="color:var(--error); font-size:0.8rem;">שגיאת יחס</span>`;
             } else if (log.carKmL) {
                 // Show comparison when car data exists
-                const diff = log.kmL - log.carKmL;
-                const percentDiff = ((diff / log.carKmL) * 100);
+                let calcValue, carValue, diff, percentDiff, unit;
+                
+                if (unitPreference === 'l100km') {
+                    calcValue = log.l100km;
+                    // Convert car kmL to l100km
+                    carValue = log.carKmL ? (100 / log.carKmL) : null;
+                    diff = carValue - calcValue; // Inverted: lower is better for L/100km
+                    percentDiff = ((diff / carValue) * 100);
+                    unit = 'ל/100';
+                } else {
+                    calcValue = log.kmL;
+                    carValue = log.carKmL;
+                    diff = calcValue - carValue;
+                    percentDiff = ((diff / carValue) * 100);
+                    unit = 'ק"מ/ל';
+                }
+                
                 const diffSign = diff >= 0 ? '+' : '';
-                const diffColor = Math.abs(diff) < 0.2 ? 'var(--text-secondary)' : (diff > 0 ? 'var(--success)' : 'var(--error)');
-                const diffIcon = Math.abs(diff) < 0.2 ? '≈' : (diff > 0 ? '✅' : '⚠️');
+                const tolerance = unitPreference === 'l100km' ? 0.2 : 0.2;
+                const diffColor = Math.abs(diff) < tolerance ? 'var(--text-secondary)' : (diff > 0 ? 'var(--success)' : 'var(--error)');
+                const diffIcon = Math.abs(diff) < tolerance ? '≈' : (diff > 0 ? '✅' : '⚠️');
                 
                 effMarkup = `
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <span style="font-size:0.75rem; color:var(--text-secondary);">חישוב:</span>
-                            <span style="color:var(--accent-1); font-size:1.1rem; font-weight:700;">${log.kmL} ק"מ/ל</span>
+                            <span style="color:var(--accent-1); font-size:1.1rem; font-weight:700;">${calcValue.toFixed(2)} ${unit}</span>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <span style="font-size:0.75rem; color:var(--text-secondary);">רכב:</span>
-                            <span style="color:var(--text-primary); font-size:1rem; font-weight:600;">${log.carKmL} ק"מ/ל</span>
+                            <span style="color:var(--text-primary); font-size:1rem; font-weight:600;">${carValue ? carValue.toFixed(2) : 'N/A'} ${unit}</span>
                         </div>
                         <div style="font-size:0.8rem; color:${diffColor};">
                             <span>${diffIcon} ${diffSign}${diff.toFixed(2)} (${diffSign}${percentDiff.toFixed(1)}%)</span>
@@ -661,8 +700,12 @@ function renderList() {
                     </div>
                 `;
             } else {
-                // No car data, show regular display
-                effMarkup = `<span class="l100" style="color:var(--accent-1); font-size:1.2rem; font-weight:700;">${log.kmL} ק"מ/ליטר</span><span class="kml" style="opacity:0.6;">${log.l100km} ליטר/100</span>`;
+                // No car data, show regular display based on unit preference
+                if (unitPreference === 'l100km') {
+                    effMarkup = `<span class="l100" style="color:var(--accent-1); font-size:1.2rem; font-weight:700;">${log.l100km} ליטר/100</span><span class="kml" style="opacity:0.6;">${log.kmL} ק"מ/ליטר</span>`;
+                } else {
+                    effMarkup = `<span class="l100" style="color:var(--accent-1); font-size:1.2rem; font-weight:700;">${log.kmL} ק"מ/ליטר</span><span class="kml" style="opacity:0.6;">${log.l100km} ליטר/100</span>`;
+                }
             }
         }
         
@@ -705,7 +748,7 @@ function initChart() {
             labels: [],
             datasets: [
                 {
-                    label: 'ק"מ/ליטר (חישוב)',
+                    label: 'חישוב',
                     data: [],
                     borderColor: '#00c6ff',
                     backgroundColor: 'rgba(0, 198, 255, 0.1)',
@@ -720,7 +763,7 @@ function initChart() {
                     yAxisID: 'y'
                 },
                 {
-                    label: 'ק"מ/ליטר (מחשב רכב)',
+                    label: 'מחשב רכב',
                     data: [],
                     borderColor: '#ff9500',
                     backgroundColor: 'rgba(255, 149, 0, 0.1)',
@@ -799,15 +842,21 @@ function updateChart() {
         return new Date(l.date).toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
     });
 
-    const dataKmL = chronologicalLogs.map(l => l.kmL);
-    const dataCarKmL = chronologicalLogs.map(l => l.carKmL || null);
+    let dataCalc, dataCarCalc;
+    if (unitPreference === 'l100km') {
+        dataCalc = chronologicalLogs.map(l => l.l100km);
+        dataCarCalc = chronologicalLogs.map(l => l.carKmL ? (100 / l.carKmL) : null);
+    } else {
+        dataCalc = chronologicalLogs.map(l => l.kmL);
+        dataCarCalc = chronologicalLogs.map(l => l.carKmL || null);
+    }
 
     efficiencyChart.data.labels = labels;
-    efficiencyChart.data.datasets[0].data = dataKmL;
-    efficiencyChart.data.datasets[1].data = dataCarKmL;
+    efficiencyChart.data.datasets[0].data = dataCalc;
+    efficiencyChart.data.datasets[1].data = dataCarCalc;
 
     // Check if we have any car data to show the second line
-    const hasCarData = dataCarKmL.some(v => v !== null);
+    const hasCarData = dataCarCalc.some(v => v !== null);
     efficiencyChart.data.datasets[1].hidden = !hasCarData;
 
     efficiencyChart.update();
