@@ -1147,23 +1147,31 @@
         saveToCloudBtn.innerHTML = '<span>שומר...</span>';
 
         try {
-            let url = `https://corsproxy.io/?${encodeURIComponent(JSONHOSTING_API)}`;
-            let method = 'POST'; // Default to creating a new Bin
+            let url, method, body;
 
             const headers = {
                 'Content-Type': 'application/json'
             };
 
             if (backupId) {
+                // Update existing: PUT /api/json/{id} with editKey + data in body
                 url = `https://corsproxy.io/?${encodeURIComponent(JSONHOSTING_API + '/' + backupId)}`;
-                method = 'PATCH'; // Update existing Bin using PATCH
-                headers['X-Edit-Key'] = accessKey;
+                method = 'PUT';
+                body = JSON.stringify({
+                    editKey: accessKey,
+                    data: JSON.stringify(logs)
+                });
+            } else {
+                // Create new: POST /api/json/save with raw JSON body
+                url = `https://corsproxy.io/?${encodeURIComponent(JSONHOSTING_API + '/save')}`;
+                method = 'POST';
+                body = JSON.stringify(logs);
             }
 
             const res = await fetch(url, {
                 method: method,
                 headers: headers,
-                body: JSON.stringify(logs)
+                body: body
             });
 
             if (!res.ok) throw new Error("שגיאה בפעולת הגיבוי. בדוק את המזהה ואת מפתח העריכה.");
