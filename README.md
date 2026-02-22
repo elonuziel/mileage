@@ -1,6 +1,6 @@
 # FuelTrack: Mileage & Fuel Tracker
 
-A lightweight, privacy-first Progressive Web Application (PWA) to track vehicle mileage and fuel efficiency.
+A lightweight, Progressive Web Application (PWA) to track vehicle mileage and fuel efficiency.
 
 ## Key Features
 - **Privacy First**: Works entirely offline; your data never leaves your device.
