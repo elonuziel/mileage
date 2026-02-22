@@ -1028,6 +1028,32 @@
         reader.readAsText(file);
     }
 
+    function parseCSVDate(dateStr) {
+        dateStr = dateStr.trim();
+        // Try DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY (common locale formats)
+        const ddmmyyyy = dateStr.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})$/);
+        if (ddmmyyyy) {
+            const day = parseInt(ddmmyyyy[1], 10);
+            const month = parseInt(ddmmyyyy[2], 10);
+            const year = parseInt(ddmmyyyy[3], 10);
+            // If day > 12, it must be DD/MM/YYYY
+            // If month > 12, it must be MM/DD/YYYY
+            // Otherwise assume DD/MM/YYYY (our export locale)
+            if (day > 12) {
+                return new Date(year, month - 1, day);
+            } else if (month > 12) {
+                return new Date(year, day - 1, month);
+            } else {
+                // Assume DD/MM/YYYY (matches Hebrew locale export)
+                return new Date(year, month - 1, day);
+            }
+        }
+        // Try ISO or other standard format
+        const parsed = new Date(dateStr);
+        if (!isNaN(parsed.getTime())) return parsed;
+        return null;
+    }
+
     function parseCSV(csvText) {
         try {
             const lines = csvText.split('\n').filter(l => l.trim() !== '');
@@ -1046,8 +1072,8 @@
                 const cols = lines[i].split(',');
                 if (cols.length < 7) continue;
 
-                const dateParsed = Date.parse(cols[0]);
-                if (isNaN(dateParsed)) continue;
+                const parsedDate = parseCSVDate(cols[0]);
+                if (!parsedDate) continue;
 
                 // Check if we have the 8th column (carKmL) - backward compatible
                 const carKmL = cols.length >= 8 && cols[6].trim() !== '' ? parseFloat(cols[6]) : null;
@@ -1055,7 +1081,7 @@
 
                 importedLogs.push({
                     id: Date.now() + i,
-                    date: new Date(dateParsed).toISOString(),
+                    date: parsedDate.toISOString(),
                     odometer: parseFloat(cols[1]),
                     distance: parseFloat(cols[2]),
                     fuel: parseFloat(cols[3]),
@@ -1102,7 +1128,9 @@
         exportLogs.forEach(row => {
             const typeStr = row.isBase ? "Base Reading" : "Refuel";
             const carKmLStr = row.carKmL || '';
-            const rowStr = `${new Date(row.date).toLocaleDateString()},${row.odometer},${row.distance},${row.fuel},${row.l100km},${row.kmL},${carKmLStr},${typeStr}`;
+            const d = new Date(row.date);
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const rowStr = `${dateStr},${row.odometer},${row.distance},${row.fuel},${row.l100km},${row.kmL},${carKmLStr},${typeStr}`;
             csvContent += rowStr + "\n";
         });
 
