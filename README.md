@@ -8,7 +8,9 @@ A lightweight, privacy-first Progressive Web Application (PWA) to track vehicle 
 - **Smart Tracking**: Calculates distance and efficiency (km/L, L/100km) between readings.
 - **Interactive Charts**: Visualize fuel consumption trends over time.
 - **Easy Backup**: Export and import your data via CSV.
-- **Cloud Backup**: Save and load your data to the cloud for free using JSONBin.io.
+- **Cloud Backup**: Multiple cloud sync options:
+  - **JSONBin.io** (`mileage_standalone.html`) — Industry-standard JSON storage with versioning.
+  - **JSONHosting.com** (`mileage_standalone_jsonhosting.html`) — Free, no-signup JSON hosting. The app auto-creates an ID and Edit Key for you.
 - **Hebrew Support**: Full RTL localization.
 
 ## Getting Started
@@ -24,15 +26,27 @@ This version includes Chart.js, a Service Worker for offline support, and a comp
 4. Select **"Add to Home Screen"** or **"Install App"** via your browser's menu for the full offline experience.
 
 ### 2. Standalone Edition (Recommended for ease-of-use)
-A single-file version of the application that requires no local web server.
+Single-file versions of the application that require no local web server.
 
 1. Clone or download the repository.
-2. Open `mileage_standalone.html` directly in any modern web browser.
+2. Open one of the standalone files directly in any modern web browser:
+   - **`mileage_standalone.html`** — Cloud sync via JSONBin.io
+   - **`mileage_standalone_jsonhosting.html`** — Cloud sync via JSONHosting.com (no account needed)
+
+### Cloud Backup (JSONHosting Edition)
+The JSONHosting standalone version allows you to back up your data to the cloud **without creating an account**:
+
+1. Open Settings (gear icon).
+2. Leave the **ID** and **Edit Key** fields empty.
+3. Click **"שמור לענן"** (Save to cloud).
+4. The app will auto-create a new cloud storage and fill in your ID & Edit Key.
+5. **⚠️ Save your ID and Edit Key somewhere safe** — without them you cannot access your backup from another device.
 
 ## Built With
 - Vanilla HTML/CSS/JavaScript
 - [Chart.js](https://www.chartjs.org/) (Data visualization)
 - Service Workers (Offline capability)
+- [JSONHosting.com](https://jsonhosting.com/) / [JSONBin.io](https://jsonbin.io/) (Cloud storage)
 
 ## License
 MIT License
