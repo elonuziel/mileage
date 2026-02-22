@@ -1,0 +1,1593 @@
+﻿<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+    <title>FuelTrack</title>
+    <!-- Chart.js Standalone via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* Palette: Modern Slate & Indigo */
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-subtle: #f1f5f9;
+
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-dark: #4f46e5;
+            --accent-soft: rgba(99, 102, 241, 0.1);
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+
+            --error: #ef4444;
+            --error-soft: rgba(239, 68, 68, 0.1);
+            --success: #10b981;
+            --success-soft: rgba(16, 185, 129, 0.1);
+
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-display: 'Outfit', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .app-container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 32px 20px 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Typography */
+        h1 {
+            font-family: var(--font-display);
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .gradient-text {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* Glass Panels */
+        .glass-panel {
+            background: var(--bg-surface);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-panel:hover {
+            box-shadow: var(--shadow-md);
+            border-color: #cbd5e1;
+        }
+
+        /* Stats Overview */
+        .stat-overview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 20px;
+            background: #ffffff;
+        }
+
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 16px 8px;
+            background: var(--bg-subtle);
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            background: var(--bg-surface);
+            border-color: var(--accent-light);
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        /* Form Styling */
+        .form-section {
+            padding: 28px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-right: 4px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-soft);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .helper-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            margin-right: 4px;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 14px 24px;
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+            filter: brightness(1.05);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            border-radius: var(--radius-md);
+            padding: 12px 24px;
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline:hover {
+            background: var(--accent-soft);
+        }
+
+        .btn-danger {
+            background: var(--error-soft);
+            color: var(--error);
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            padding: 12px 24px;
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-danger:hover {
+            background: #fee2e2;
+            border-color: #fca5a5;
+        }
+
+        /* Icon Buttons */
+        .icon-btn {
+            background: var(--bg-subtle);
+            border: 1px solid #e2e8f0;
+            color: var(--text-secondary);
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background: #ffffff;
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: rotate(15deg);
+        }
+
+        /* Chart Section */
+        .chart-section {
+            padding: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        /* Log List */
+        .list-section {
+            padding: 24px;
+        }
+
+        .log-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .log-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .log-item:hover {
+            border-color: var(--accent-light);
+            background: #fafafa;
+            transform: translateX(-4px);
+        }
+
+        .log-date {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-date .date {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .log-date .values {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .log-eff {
+            text-align: left;
+        }
+
+        .log-eff .l100 {
+            font-family: var(--font-display);
+            font-weight: 800;
+            color: var(--accent);
+            font-size: 1.125rem;
+        }
+
+        .log-eff .kml {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Modals */
+        dialog {
+            width: 92%;
+            max-width: 480px;
+            border: none;
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            box-shadow: var(--shadow-xl);
+            background: #ffffff;
+        }
+
+        dialog::backdrop {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .btn-close {
+            background: var(--bg-subtle);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-close:hover {
+            background: #fee2e2;
+            color: var(--error);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .app-container {
+                padding: 20px 16px 80px;
+            }
+
+            h1 {
+                font-size: 1.875rem;
+            }
+
+            .stat-overview {
+                grid-template-columns: repeat(3, 1fr);
+                padding: 16px;
+            }
+
+            .stat-value {
+                font-size: 1.125rem;
+            }
+
+            .stat-label {
+                font-size: 0.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <div class="header-content">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#cyan-purple)" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <defs>
+                        <linearGradient id="cyan-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#0072ff" />
+                            <stop offset="100%" stop-color="#00c6ff" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+                <div style="flex-grow: 1;">
+                    <h1>מעקב <span class="gradient-text">דלק</span></h1>
+                    <p class="subtitle">מעקב צריכת דלק וקילומטראז'</p>
+                </div>
+                <button type="button" class="icon-btn" id="openSettingsBtn" aria-label="הגדרות">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <section class="glass-panel stat-overview">
+                <div class="stat-card">
+                    <span class="stat-label">ממוצע ק"מ/ליטר</span>
+                    <span class="stat-value" id="avgKmL">-</span>
+                </div>
+                <div class="stat-card" style="opacity: 0.6; transform: scale(0.95);">
+                    <span class="stat-label">ממוצע ליטר/100 ק"מ</span>
+                    <span class="stat-value" id="avgL100">-</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">סה"כ ק"מ שנוסעו</span>
+                    <span class="stat-value" id="totalKm">0</span>
+                </div>
+            </section>
+
+            <section class="glass-panel form-section" id="formContainer">
+                <!-- Dynamically injected via JS based on base odometer state -->
+            </section>
+
+            <section class="glass-panel chart-section">
+                <div class="section-header">
+                    <h2>מגמות יעילות דלק</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="efficiencyChart"></canvas>
+                </div>
+            </section>
+
+            <section class="glass-panel list-section">
+                <div class="list-header">
+                    <h2>רשומות אחרונות</h2>
+                </div>
+                <div class="log-list" id="logList">
+                    <!-- Logs inserted here by JS -->
+                </div>
+            </section>
+
+            <!-- Edit Modal -->
+            <dialog id="editModal">
+                <div class="modal-header">
+                    <h2>עריכת רשומה</h2>
+                    <button type="button" class="btn-close" id="closeEditBtn">&times;</button>
+                </div>
+                <form id="editLogForm">
+                    <input type="hidden" id="editLogId">
+                    <div class="input-group">
+                        <label for="editDate">תאריך</label>
+                        <input type="date" id="editDate" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="editOdo">מד מרחק (ק"מ)</label>
+                        <input type="number" id="editOdo" step="0.1" required>
+                    </div>
+                    <div class="input-group" id="editFuelGroup">
+                        <label for="editFuel">דלק (ליטרים)</label>
+                        <input type="number" id="editFuel" step="0.01" required>
+                    </div>
+                    <div class="input-group" id="editCarKmLGroup">
+                        <label for="editCarKmL">ק"מ/ליטר לפי מחשב הרכב (אופציונלי)</label>
+                        <input type="number" id="editCarKmL" step="0.1">
+                    </div>
+                    <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
+                        <button type="submit" class="btn-primary">
+                            <span>שמור שינויים</span>
+                        </button>
+                        <button type="button" id="deleteLogBtn" class="btn-danger">
+                            מחק רשומה זו
+                        </button>
+                    </div>
+                </form>
+            </dialog>
+
+            <!-- Settings Modal -->
+            <dialog id="settingsModal" style="max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h2>הגדרות וגיבוי</h2>
+                    <button type="button" class="btn-close" id="closeSettingsBtn">&times;</button>
+                </div>
+
+                <section class="settings-section">
+                    <h3
+                        style="font-size: 1.1rem; margin-bottom: 12px; font-family: var(--font-display); font-weight: 700;">
+                        גיבוי ענן (JSONHosting.com)</h3>
+                    <div class="helper-text"
+                        style="margin-bottom: 20px; line-height: 1.6; color: var(--text-secondary); background: var(--bg-subtle); padding: 16px; border-radius: var(--radius-md);">
+                        האתר <a href="https://jsonhosting.com" target="_blank"
+                            style="color: var(--accent); text-decoration: underline; font-weight: 600;">JSONHosting.com</a>
+                        מאפשר אחסון JSON חינמי ללא הרשמה.
+                        <br><br>
+                        <strong>ליצירת גיבוי חדש:</strong> השאר את שני השדות <b>ריקים</b> ולחץ "שמור לענן" — האפליקציה
+                        תיצור אחסון חדש ותמלא את ה-ID ומפתח העריכה אוטומטית.
+                        <br><br>
+                        <strong>לחיבור לגיבוי קיים:</strong> הזן את ה-ID (או הקישור המלא) לטעינה בלבד, או הזן גם את
+                        ה-Edit Key אם ברצונך לעדכן את הגיבוי.
+                        <br><br>
+                        <strong
+                            style="color: var(--error); font-size: 0.95rem; display: block; margin: 8px 0; padding: 12px; background: var(--error-soft); border-radius: var(--radius-sm); border: 1px solid #fca5a5;">⚠️
+                            חשוב: שמור את ה-ID ומפתח העריכה במקום בטוח! ללא פרטים אלה לא תוכל לגשת לגיבוי שלך ממכשיר
+                            אחר.</strong>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="cloudBackupId">מזהה (ID) או קישור מלא</label>
+                        <input type="text" id="cloudBackupId" placeholder="הדבק ID (למשל 3511dea7) או קישור API מלא">
+                    </div>
+
+                    <div class="input-group" style="margin-top: 16px;">
+                        <label for="cloudAccessKey">מפתח עריכה לשמירה (Edit Key)</label>
+                        <div class="password-input-wrapper"
+                            style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="cloudAccessKey" placeholder="הדבק כאן את מפתח העריכה"
+                                style="width: 100%; padding-left: 48px;">
+                            <button type="button" id="toggleKeyVisibility" class="password-toggle-btn"
+                                style="position: absolute; left: 8px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; padding: 8px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sync-actions" style="margin-top: 20px; display: flex; gap: 12px;">
+                        <button id="saveToCloudBtn" class="btn-primary" style="flex: 1;">
+                            <span>שמור לענן</span>
+                        </button>
+                        <button id="loadFromCloudBtn" class="btn-outline" style="flex: 1;">טען מענן</button>
+                    </div>
+                </section>
+
+                <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 24px 0;">
+
+                <section class="settings-section">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 12px;">העדפות תצוגה</h3>
+                    <div class="input-group">
+                        <label>יחידת מדידה ליעילות דלק</label>
+                        <div style="display: flex; gap: 16px; margin-top: 8px;">
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="unitPreference" value="kmL" id="unitKmL" checked>
+                                <span>ק"מ/ליטר</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="unitPreference" value="l100km" id="unitL100km">
+                                <span>ליטר/100 ק"מ</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 24px 0;">
+
+                <section class="settings-section">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 12px;">ניהול נתונים מקומי</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <input type="file" id="importCsvInput" accept=".csv" style="display: none;">
+                        <button id="importDataBtn" class="btn-text btn-outline"
+                            style="border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 12px; width: 100%;">ייבא
+                            מ-CSV</button>
+                        <button id="exportDataBtn" class="btn-text btn-outline"
+                            style="border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 12px; width: 100%;">ייצא
+                            ל-CSV</button>
+                        <button id="clearDataBtn" class="btn-text btn-danger"
+                            style="border: 1px solid var(--error); border-radius: var(--radius-sm); padding: 12px; width: 100%; margin-top: 12px;">מחק
+                            את כל הנתונים</button>
+                    </div>
+                </section>
+            </dialog>
+
+        </main>
+    </div>
+
+</body>
+<script>
+    // Standalone version - no service worker
+
+    // Data Management
+    let logs = JSON.parse(localStorage.getItem('mileageLogs')) || [];
+    const STORAGE_KEY = 'mileageLogs';
+    const JSONHOSTING_API = 'https://jsonhosting.com/api/json';
+    let unitPreference = localStorage.getItem('unitPreference') || 'kmL'; // 'kmL' or 'l100km'
+
+    // DOM Elements
+    const formContainer = document.getElementById('formContainer');
+    const importCsvInput = document.getElementById('importCsvInput');
+    const importDataBtn = document.getElementById('importDataBtn');
+    const exportDataBtn = document.getElementById('exportDataBtn');
+    const clearDataBtn = document.getElementById('clearDataBtn');
+    const logList = document.getElementById('logList');
+
+    // Sync Elements
+    const cloudBackupIdInput = document.getElementById('cloudBackupId');
+    const cloudAccessKeyInput = document.getElementById('cloudAccessKey');
+    const saveToCloudBtn = document.getElementById('saveToCloudBtn');
+    const loadFromCloudBtn = document.getElementById('loadFromCloudBtn');
+
+    // Settings Modal Elements
+    const openSettingsBtn = document.getElementById('openSettingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const toggleKeyVisibilityBtn = document.getElementById('toggleKeyVisibility');
+    const unitKmLRadio = document.getElementById('unitKmL');
+    const unitL100kmRadio = document.getElementById('unitL100km');
+
+    // Edit Modal Elements
+    const editModal = document.getElementById('editModal');
+    const editLogForm = document.getElementById('editLogForm');
+    const editOdo = document.getElementById('editOdo');
+    const editFuel = document.getElementById('editFuel');
+    const editDate = document.getElementById('editDate');
+    const editCarKmL = document.getElementById('editCarKmL');
+    const editLogId = document.getElementById('editLogId');
+    const closeEditBtn = document.getElementById('closeEditBtn');
+    const deleteLogBtn = document.getElementById('deleteLogBtn');
+    const editFuelGroup = document.getElementById('editFuelGroup');
+    const editCarKmLGroup = document.getElementById('editCarKmLGroup');
+
+    const elAvgL100 = document.getElementById('avgL100');
+    const elAvgKmL = document.getElementById('avgKmL');
+    const elTotalKm = document.getElementById('totalKm');
+    const elCarDiff = document.getElementById('carDiff');
+    const carComparisonCard = document.getElementById('carComparisonCard');
+
+    // Chart Instance
+    let efficiencyChart = null;
+
+    // Initialize
+    function init() {
+        initChart();
+        updateUI();
+
+        importDataBtn.addEventListener('click', () => importCsvInput.click());
+        importCsvInput.addEventListener('change', handleImportCSV);
+        exportDataBtn.addEventListener('click', handleExportCSV);
+        clearDataBtn.addEventListener('click', handleClearData);
+
+        // Sync listeners
+        if (saveToCloudBtn) {
+            saveToCloudBtn.addEventListener('click', handleSaveToCloud);
+            loadFromCloudBtn.addEventListener('click', handleLoadFromCloud);
+
+            const savedCloudId = localStorage.getItem('mileageCloudBackupId');
+            if (savedCloudId) {
+                cloudBackupIdInput.value = savedCloudId;
+            }
+            const savedCloudKey = localStorage.getItem('mileageCloudAccessKey');
+            if (savedCloudKey) {
+                cloudAccessKeyInput.value = savedCloudKey;
+            }
+        }
+
+        // Modal listeners
+        closeEditBtn.addEventListener('click', () => editModal.close());
+        editLogForm.addEventListener('submit', handleEditLogSubmit);
+        deleteLogBtn.addEventListener('click', handleDeleteLog);
+
+        // Settings listeners
+        if (openSettingsBtn) {
+            openSettingsBtn.addEventListener('click', () => {
+                settingsModal.showModal();
+                // Load current unit preference
+                if (unitPreference === 'l100km') {
+                    unitL100kmRadio.checked = true;
+                } else {
+                    unitKmLRadio.checked = true;
+                }
+            });
+            closeSettingsBtn.addEventListener('click', () => settingsModal.close());
+
+            // Unit preference change listeners
+            if (unitKmLRadio && unitL100kmRadio) {
+                unitKmLRadio.addEventListener('change', handleUnitChange);
+                unitL100kmRadio.addEventListener('change', handleUnitChange);
+            }
+
+            const eyeIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            const eyeOffIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+            toggleKeyVisibilityBtn.addEventListener('click', () => {
+                if (cloudAccessKeyInput.type === 'password') {
+                    cloudAccessKeyInput.type = 'text';
+                    toggleKeyVisibilityBtn.innerHTML = eyeOffIcon;
+                } else {
+                    cloudAccessKeyInput.type = 'password';
+                    toggleKeyVisibilityBtn.innerHTML = eyeIcon;
+                }
+            });
+        }
+    }
+
+    function handleUnitChange(e) {
+        unitPreference = e.target.value;
+        localStorage.setItem('unitPreference', unitPreference);
+        updateUI();
+    }
+
+    // Global Form Handlers are attached dynamically on render
+    function renderForm() {
+        formContainer.innerHTML = '';
+
+        if (logs.length === 0) {
+            // Render Initial Odometer Form
+            formContainer.innerHTML = `
+            <div class="section-header">
+                <h2>הגדרת פרופיל רכב</h2>
+            </div>
+            <form id="baseLogForm">
+                <div class="input-group">
+                    <label for="baseOdo">מד מרחק התחלתי (ק"מ)</label>
+                    <input type="number" id="baseOdo" step="0.1" required placeholder="לדוגמה: 50,000">
+                    <div class="helper-text">קבע את הקילומטראז' ההתחלתי של הרכב.</div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    <span>הגדר מד מרחק התחלתי</span>
+                </button>
+            </form>
+        `;
+            document.getElementById('baseLogForm').addEventListener('submit', handleSetBase);
+        } else {
+            // Render Standard Refuel Form
+            const lastOdo = logs[0].odometer;
+            formContainer.innerHTML = `
+            <div class="section-header">
+                <h2>תיעוד תדלוק חדש</h2>
+            </div>
+            <form id="refuelLogForm">
+                <div class="input-group">
+                    <label for="currentOdo">מד מרחק נוכחי (ק"מ)</label>
+                    <input type="number" id="currentOdo" step="0.1" required placeholder="חייב להיות > ${lastOdo}">
+                    <div class="helper-text">קריאה קודמת: ${lastOdo.toLocaleString()} ק"מ</div>
+                </div>
+                <div class="input-group">
+                    <label for="fuelAmt">כמות דלק (ליטרים)</label>
+                    <input type="number" id="fuelAmt" step="0.01" required placeholder="לדוגמה: 42.5">
+                </div>
+                <div class="input-group">
+                    <label for="carKmL">צריכה לפי מחשב הרכב (אופציונלי)</label>
+                    <input type="number" id="carKmL" step="0.1" placeholder='ממוצע ק"מ/ליטר'>
+                    <div class="helper-text">להשוואת דיוק המחשב</div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>שמור רשומת תדלוק</span>
+                </button>
+            </form>
+        `;
+            document.getElementById('refuelLogForm').addEventListener('submit', handleRefuelLog);
+        }
+    }
+
+    function handleSetBase(e) {
+        e.preventDefault();
+        const odo = parseFloat(document.getElementById('baseOdo').value);
+
+        if (isNaN(odo) || odo < 0) {
+            alert("אנא הכנס קריאת מד מרחק חיובית ותקינה.");
+            return;
+        }
+
+        const newLog = {
+            id: Date.now(),
+            date: new Date().toISOString(),
+            odometer: odo,
+            distance: 0, // Base has 0 distance
+            fuel: 0,     // Base has 0 fuel
+            l100km: 0,
+            kmL: 0,
+            isBase: true
+        };
+
+        logs.unshift(newLog);
+        saveLogs();
+        updateUI();
+    }
+
+    function handleRefuelLog(e) {
+        e.preventDefault();
+
+        const lastLog = logs[0];
+        const currentOdo = parseFloat(document.getElementById('currentOdo').value);
+        const fuel = parseFloat(document.getElementById('fuelAmt').value);
+        const carKmLInput = document.getElementById('carKmL').value;
+        const carKmL = carKmLInput ? parseFloat(carKmLInput) : null;
+
+        if (isNaN(currentOdo) || isNaN(fuel) || fuel <= 0) {
+            alert("אנא הכנס מספרים תקינים. כמות הדלק חייבת להיות חיובית.");
+            return;
+        }
+
+        if (currentOdo <= lastLog.odometer) {
+            alert(`מד המרחק חייב להיות גדול מהקריאה הקודמת שלך (${lastLog.odometer} ק"מ).`);
+            return;
+        }
+
+        if (carKmL !== null && (isNaN(carKmL) || carKmL <= 0)) {
+            alert("ק\"מ/ליטר של מחשב הרכב חייב להיות מספר חיובי.");
+            return;
+        }
+
+        const distance = currentOdo - lastLog.odometer;
+        const l100km = (fuel / distance) * 100;
+        const kmL = distance / fuel;
+
+        const newLog = {
+            id: Date.now(),
+            date: new Date().toISOString(),
+            odometer: currentOdo,
+            distance: parseFloat(distance.toFixed(1)),
+            fuel: fuel,
+            l100km: parseFloat(l100km.toFixed(2)),
+            kmL: parseFloat(kmL.toFixed(2)),
+            carKmL: carKmL,
+            isBase: false
+        };
+
+        logs.unshift(newLog); // Add to beginning
+        recalculateLogs();
+        saveLogs();
+        updateUI();
+    }
+
+    function recalculateLogs() {
+        if (logs.length === 0) return;
+
+        // Sort chronologically (oldest first)
+        logs.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        // First entry becomes the base
+        const firstLog = logs[0];
+        firstLog.isBase = true;
+        firstLog.distance = 0;
+
+        for (let i = 1; i < logs.length; i++) {
+            const prev = logs[i - 1];
+            const curr = logs[i];
+
+            curr.isBase = false;
+            const distance = curr.odometer - prev.odometer;
+            curr.distance = parseFloat(distance.toFixed(1));
+
+            if (distance > 0 && curr.fuel > 0) {
+                const l100 = (curr.fuel / distance) * 100;
+                const kml = distance / curr.fuel;
+                curr.l100km = parseFloat(l100.toFixed(2));
+                curr.kmL = parseFloat(kml.toFixed(2));
+            } else {
+                curr.l100km = 0;
+                curr.kmL = 0;
+            }
+        }
+
+        // Sort back to reverse chronological (newest first)
+        logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+
+    function openEditModal(id) {
+        const log = logs.find(l => l.id === id);
+        if (!log) return;
+
+        editLogId.value = log.id;
+        editOdo.value = log.odometer;
+
+        // Format date for date input (YYYY-MM-DD)
+        const logDate = new Date(log.date);
+        const tzOffset = logDate.getTimezoneOffset() * 60000;
+        const localISODate = (new Date(logDate - tzOffset)).toISOString().slice(0, 10);
+        editDate.value = localISODate;
+
+        if (log.isBase) {
+            editFuelGroup.style.display = 'none';
+            editFuel.removeAttribute('required');
+            editFuel.value = '';
+            editCarKmLGroup.style.display = 'none';
+            editCarKmL.value = '';
+        } else {
+            editFuelGroup.style.display = 'flex';
+            editFuel.setAttribute('required', 'true');
+            editFuel.value = log.fuel;
+            editCarKmLGroup.style.display = 'flex';
+            editCarKmL.value = log.carKmL || '';
+        }
+
+        editModal.showModal();
+    }
+
+    function handleEditLogSubmit(e) {
+        e.preventDefault();
+        const id = parseInt(editLogId.value);
+        const log = logs.find(l => l.id === id);
+        if (!log) return;
+
+        const newDateStr = editDate.value;
+        if (!newDateStr) {
+            alert("אנא הכנס תאריך תקין.");
+            return;
+        }
+
+        // Preserve the original time portion of the ISO string
+        const originalTime = log.date.substring(10); // gets "T14:30:00.000Z"
+        log.date = newDateStr + originalTime;
+
+        const newOdo = parseFloat(editOdo.value);
+        if (isNaN(newOdo) || newOdo < 0) {
+            alert("אנא הכנס קריאת מד מרחק תקינה.");
+            return;
+        }
+
+        log.odometer = newOdo;
+
+        if (!log.isBase) {
+            const newFuel = parseFloat(editFuel.value);
+            if (isNaN(newFuel) || newFuel <= 0) {
+                alert("אנא הכנס כמות דלק תקינה.");
+                return;
+            }
+            log.fuel = newFuel;
+
+            const carKmLInput = editCarKmL.value;
+            const carKmLValue = carKmLInput ? parseFloat(carKmLInput) : null;
+            if (carKmLValue !== null && (isNaN(carKmLValue) || carKmLValue <= 0)) {
+                alert("ק\"מ/ליטר של מחשב הרכב חייב להיות מספר חיובי.");
+                return;
+            }
+            log.carKmL = carKmLValue;
+        }
+
+        editModal.close();
+        recalculateLogs();
+        saveLogs();
+        updateUI();
+    }
+
+    function handleDeleteLog() {
+        const id = parseInt(editLogId.value);
+        if (confirm("האם אתה בטוח שברצונך למחוק רשומה זו?")) {
+            logs = logs.filter(l => l.id !== id);
+            editModal.close();
+            recalculateLogs();
+            saveLogs();
+            updateUI();
+        }
+    }
+
+    function handleClearData() {
+        if (confirm("האם אתה בטוח שברצונך לנקות את כל הנתונים? לא ניתן לבטל פעולה זו.")) {
+            logs = [];
+            saveLogs();
+            updateUI();
+        }
+    }
+
+    function handleImportCSV(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const text = event.target.result;
+            parseCSV(text);
+
+            // Reset input so the same file can be selected again if needed
+            importCsvInput.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    function parseCSV(csvText) {
+        try {
+            const lines = csvText.split('\n').filter(l => l.trim() !== '');
+            if (lines.length < 2) throw new Error("הקובץ ריק או שחסרה שורת כותרת");
+
+            // Ensure header matches expected format loosely
+            const header = lines[0].toLowerCase();
+            if (!header.includes("odometer") || !header.includes("distance") || !header.includes("fuel")) {
+                throw new Error("כותרת ה-CSV אינה תואמת לפורמט התקין.");
+            }
+
+            const importedLogs = [];
+
+            // Parse rows
+            for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(',');
+                if (cols.length < 7) continue;
+
+                const dateParsed = Date.parse(cols[0]);
+                if (isNaN(dateParsed)) continue;
+
+                // Check if we have the 8th column (carKmL) - backward compatible
+                const carKmL = cols.length >= 8 && cols[6].trim() !== '' ? parseFloat(cols[6]) : null;
+                const typeCol = cols.length >= 8 ? cols[7] : cols[6];
+
+                importedLogs.push({
+                    id: Date.now() + i,
+                    date: new Date(dateParsed).toISOString(),
+                    odometer: parseFloat(cols[1]),
+                    distance: parseFloat(cols[2]),
+                    fuel: parseFloat(cols[3]),
+                    l100km: parseFloat(cols[4]),
+                    kmL: parseFloat(cols[5]),
+                    carKmL: carKmL,
+                    isBase: typeCol.trim() === "Base Reading"
+                });
+            }
+
+            if (importedLogs.length > 0) {
+                // Merge arrays
+                logs = [...logs, ...importedLogs];
+
+                // Remove exact duplicates by ID
+                const uniqueLogs = Array.from(new Map(logs.map(log => [log.id, log])).values());
+                logs = uniqueLogs;
+
+                recalculateLogs(); // This will properly sort and fix all distances/bases
+                saveLogs();
+                updateUI();
+                alert(`יובאו בהצלחה ${importedLogs.length} רשומות!`);
+            } else {
+                alert("לא נמצאו שורות נתונים תקינות בקובץ ה-CSV.");
+            }
+
+        } catch (err) {
+            alert("שגיאה בייבוא CSV: " + err.message);
+        }
+    }
+
+    function handleExportCSV() {
+        if (logs.length === 0) {
+            alert("אין נתונים לייצוא.");
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Date,Odometer (km),Distance Driven (km),Fuel (L),L/100km,km/L,Car km/L,Type\n";
+
+        // Export in chronological order (oldest first)
+        const exportLogs = [...logs].reverse();
+
+        exportLogs.forEach(row => {
+            const typeStr = row.isBase ? "Base Reading" : "Refuel";
+            const carKmLStr = row.carKmL || '';
+            const rowStr = `${new Date(row.date).toLocaleDateString()},${row.odometer},${row.distance},${row.fuel},${row.l100km},${row.kmL},${carKmLStr},${typeStr}`;
+            csvContent += rowStr + "\n";
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "mileage_export.csv");
+        document.body.appendChild(link); // Required for FF
+
+        link.click();
+        link.remove();
+    }
+
+    function saveLogs() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+    }
+
+    async function handleSaveToCloud() {
+        if (logs.length === 0) {
+            alert("אין נתונים לשמירה.");
+            return;
+        }
+
+        let backupId = cloudBackupIdInput.value.trim();
+        const accessKey = cloudAccessKeyInput.value.trim(); // This is the Edit Key for JSONHosting
+
+        // Auto-extract ID if the user pasted a full JSONHosting URL
+        if (backupId.includes('jsonhosting.com')) {
+            const matches = backupId.match(/\/api\/json\/([a-zA-Z0-9]+)/) || backupId.match(/\/get\/([a-zA-Z0-9]+)/);
+            if (matches && matches[1]) {
+                backupId = matches[1];
+                cloudBackupIdInput.value = backupId;
+            }
+        }
+
+        if (backupId && !accessKey) {
+            alert("כדי לעדכן גיבוי קיים יש להכניס את ה-Edit Key (מפתח העריכה). לקבלת גיבוי חדש, מחק את המזהה.");
+            return;
+        }
+
+        saveToCloudBtn.disabled = true;
+        saveToCloudBtn.innerHTML = '<span>שומר...</span>';
+
+        try {
+            let url, method, body;
+
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            if (backupId) {
+                // Update existing: PUT /api/json/{id} with editKey + data in body
+                url = `https://corsproxy.io/?${encodeURIComponent(JSONHOSTING_API + '/' + backupId)}`;
+                method = 'PUT';
+                body = JSON.stringify({
+                    editKey: accessKey,
+                    data: JSON.stringify(logs)
+                });
+            } else {
+                // Create new: POST /api/json/save with raw JSON body
+                url = `https://corsproxy.io/?${encodeURIComponent(JSONHOSTING_API + '/save')}`;
+                method = 'POST';
+                body = JSON.stringify(logs);
+            }
+
+            const res = await fetch(url, {
+                method: method,
+                headers: headers,
+                body: body
+            });
+
+            if (!res.ok) throw new Error("שגיאה בפעולת הגיבוי. בדוק את המזהה ואת מפתח העריכה.");
+
+            if (method === 'POST') {
+                const data = await res.json();
+                const newBinId = data.id;
+                const newEditKey = data.editKey;
+
+                cloudBackupIdInput.value = newBinId;
+                cloudAccessKeyInput.value = newEditKey;
+
+                localStorage.setItem('mileageCloudBackupId', newBinId);
+                localStorage.setItem('mileageCloudAccessKey', newEditKey);
+
+                alert(`גיבוי חדש נוצר בהצלחה!\nמזהה: ${newBinId}\nמפתח עריכה: ${newEditKey}\n\nהם נשמרו אוטומטית בהגדרות שלך. אזהרה: שמור אותם כדי שתוכל לשחזר בעתיד.`);
+            } else {
+                alert("הנתונים עודכנו בענן בהצלחה!");
+                localStorage.setItem('mileageCloudBackupId', backupId);
+                localStorage.setItem('mileageCloudAccessKey', accessKey);
+            }
+        } catch (err) {
+            if (err.message === 'Failed to fetch') {
+                alert("שגיאת רשת: לא ניתן להתחבר לשרת הגיבוי.\n\nבדוק את חיבור האינטרנט שלך.");
+            } else {
+                alert(err.message);
+            }
+        } finally {
+            saveToCloudBtn.disabled = false;
+            saveToCloudBtn.innerHTML = '<span>שמור לענן</span>';
+        }
+    }
+
+    async function handleLoadFromCloud() {
+        let backupId = cloudBackupIdInput.value.trim();
+
+        // Auto-extract ID if the user pasted a full JSONHosting URL
+        if (backupId.includes('jsonhosting.com')) {
+            const matches = backupId.match(/\/api\/json\/([a-zA-Z0-9]+)/) || backupId.match(/\/get\/([a-zA-Z0-9]+)/);
+            if (matches && matches[1]) {
+                backupId = matches[1];
+                cloudBackupIdInput.value = backupId;
+            }
+        }
+
+        if (!backupId) {
+            alert("אנא הכנס מזהה גיבוי (ID) כדי לטעון נתונים.");
+            return;
+        }
+
+
+        loadFromCloudBtn.disabled = true;
+        loadFromCloudBtn.textContent = 'טוען...';
+
+        try {
+            const url = `https://corsproxy.io/?${encodeURIComponent(JSONHOSTING_API + '/' + backupId + '/raw')}`;
+            const res = await fetch(url);
+
+            if (!res.ok) {
+                if (res.status === 404) throw new Error("גיבוי לא נמצא. בדוק את המזהה שלך.");
+                throw new Error("שגיאה בטעינת נתונים מחשבון הענן.");
+            }
+
+            const json = await res.json();
+            // In case the API returns a stringified version of the array, parse it.
+            const importedLogs = typeof json === 'string' ? JSON.parse(json) : json;
+
+            if (!Array.isArray(importedLogs)) {
+                throw new Error("הנתונים בענן אינם תקינים.");
+            }
+
+            if (importedLogs.length > 0) {
+                if (confirm(`נמצאו ${importedLogs.length} רשומות בענן. האם למזג אותן עם הנתונים הקיימים שלך? (כן = למזג, לא = להחליף לגמרי)`)) {
+                    logs = [...logs, ...importedLogs];
+                    // Remove exact duplicates by ID
+                    const uniqueLogs = Array.from(new Map(logs.map(log => [log.id, log])).values());
+                    logs = uniqueLogs;
+                } else {
+                    logs = importedLogs;
+                }
+
+                localStorage.setItem('mileageCloudBackupId', backupId);
+                recalculateLogs();
+                saveLogs();
+                updateUI();
+                alert("הנתונים נטענו בהצלחה!");
+            } else {
+                alert("אין רשומות בגיבוי זה.");
+            }
+
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            loadFromCloudBtn.disabled = false;
+            loadFromCloudBtn.textContent = 'טען מענן';
+        }
+    }
+
+    // UI Updates
+    function updateUI() {
+        renderForm();
+        renderStats();
+        renderList();
+        updateChart();
+    }
+
+    function renderStats() {
+        if (elAvgKmL && elAvgKmL.parentElement) {
+            const cardAvgKmL = elAvgKmL.parentElement;
+            const cardAvgL100 = elAvgL100.parentElement;
+            if (unitPreference === 'l100km') {
+                cardAvgKmL.style.display = 'none';
+                cardAvgL100.style.display = 'flex';
+                cardAvgL100.style.opacity = '1';
+                cardAvgL100.style.transform = 'none';
+            } else {
+                cardAvgKmL.style.display = 'flex';
+                cardAvgL100.style.display = 'none';
+            }
+        }
+
+        // Need at least one refuel log to calculate averages
+        const refuelLogs = logs.filter(l => !l.isBase);
+
+        if (refuelLogs.length === 0) {
+            elAvgL100.textContent = '-';
+            elAvgKmL.textContent = '-';
+            elTotalKm.textContent = '0';
+            if (carComparisonCard) carComparisonCard.style.display = 'none';
+            return;
+        }
+
+        const totalDistance = refuelLogs.reduce((sum, log) => sum + log.distance, 0);
+        const totalFuel = refuelLogs.reduce((sum, log) => sum + log.fuel, 0);
+
+        const avgL100 = (totalFuel / totalDistance) * 100;
+        const avgKmL = totalDistance / totalFuel;
+
+        elAvgL100.textContent = avgL100.toFixed(2);
+        elAvgKmL.textContent = avgKmL.toFixed(2);
+        elTotalKm.textContent = totalDistance.toFixed(1);
+
+        // Calculate car comparison if we have car data
+        const logsWithCarData = refuelLogs.filter(l => l.carKmL);
+        if (logsWithCarData.length > 0 && carComparisonCard && elCarDiff) {
+            const avgCarKmL = logsWithCarData.reduce((sum, log) => sum + log.carKmL, 0) / logsWithCarData.length;
+            const diff = avgKmL - avgCarKmL;
+            const percentDiff = ((diff / avgCarKmL) * 100);
+            const diffSign = diff >= 0 ? '+' : '';
+            const diffColor = Math.abs(diff) < 0.2 ? 'var(--text-secondary)' : (diff > 0 ? 'var(--success)' : 'var(--error)');
+
+            elCarDiff.textContent = `${diffSign}${diff.toFixed(2)}`;
+            elCarDiff.style.color = diffColor;
+            carComparisonCard.style.display = 'flex';
+        } else if (carComparisonCard) {
+            carComparisonCard.style.display = 'none';
+        }
+    }
+
+    function renderList() {
+        logList.innerHTML = '';
+
+        if (logs.length === 0) {
+            logList.innerHTML = `
+                <div class="empty-state" style="display:flex; flex-direction:column; align-items:center; gap:16px; padding:48px 24px; color:var(--text-muted);">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <p style="font-weight:500;">אין רשומות עדיין. הוסף תיעוד ראשון למעלה.</p>
+                </div>
+            `;
+            return;
+        }
+
+        logs.forEach(log => {
+            const dateObj = new Date(log.date);
+            const dateString = dateObj.toLocaleDateString('he-IL', {
+                month: 'short', day: 'numeric', year: 'numeric'
+            });
+
+            const typeBadge = log.isBase ? `<span style="font-size:0.65rem; background:var(--bg-subtle); color:var(--text-secondary); padding:2px 8px; border-radius:12px; font-weight:700; border:1px solid #e2e8f0; vertical-align:middle; margin-right:8px;">בסיס</span>` : '';
+
+            let effMarkup = '';
+            if (log.isBase) {
+                effMarkup = `<span class="l100" style="color:var(--text-muted); opacity:0.5;">---</span>`;
+            } else {
+                const hasEffData = log.l100km > 0 || log.kmL > 0;
+                if (!hasEffData) {
+                    effMarkup = `<span class="kml" style="color:var(--error); font-weight:700;">שגיאה</span>`;
+                } else if (log.carKmL) {
+                    let calcValue, carValue, diff, unit;
+
+                    if (unitPreference === 'l100km') {
+                        calcValue = log.l100km;
+                        carValue = 100 / log.carKmL;
+                        diff = carValue - calcValue;
+                        unit = 'ל/100';
+                    } else {
+                        calcValue = log.kmL;
+                        carValue = log.carKmL;
+                        diff = calcValue - carValue;
+                        unit = 'ק"מ/ל';
+                    }
+
+                    const diffSign = diff >= 0 ? '+' : '';
+                    const tolerance = 0.2;
+                    const diffColor = Math.abs(diff) < tolerance ? 'var(--text-secondary)' : (diff > 0 ? 'var(--success)' : 'var(--error)');
+
+                    effMarkup = `
+                    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:2px;">
+                        <span class="l100">${calcValue.toFixed(2)} <small style="font-size:0.7rem; font-weight:600; opacity:0.7;">${unit}</small></span>
+                        <div style="font-size:0.7rem; color:${diffColor}; font-weight:700; display:flex; align-items:center; gap:4px;">
+                            <span>${diffSign}${diff.toFixed(2)}</span>
+                            <span style="opacity:0.6; font-weight:500;">(${diffSign}${((diff / carValue) * 100).toFixed(1)}%)</span>
+                        </div>
+                    </div>
+                `;
+                } else {
+                    const val = unitPreference === 'l100km' ? log.l100km : log.kmL;
+                    const unit = unitPreference === 'l100km' ? 'ל/100' : 'ק"מ/ל';
+                    effMarkup = `<span class="l100">${val.toFixed(2)} <small style="font-size:0.7rem; font-weight:600; opacity:0.7;">${unit}</small></span>`;
+                }
+            }
+
+            const metricsMarkup = log.isBase ?
+                `${log.odometer.toLocaleString()} ק"מ` :
+                `<strong style="color:var(--text-primary);">${log.odometer.toLocaleString()} ק"מ</strong> <span style="opacity:0.4;">•</span> +${log.distance} ק"מ <span style="opacity:0.4;">•</span> ${log.fuel}ל'`;
+
+            const el = document.createElement('div');
+            el.className = 'log-item';
+
+            el.innerHTML = `
+            <div class="log-date">
+                <div style="display:flex; align-items:center;">
+                    <span class="date">${dateString}</span>
+                    ${typeBadge}
+                </div>
+                <span class="values">${metricsMarkup}</span>
+            </div>
+            <div class="log-eff">
+                ${effMarkup}
+            </div>
+            <button class="edit-btn-trigger" style="position:absolute; top:0; left:0; width:100%; height:100%; border:none; background:transparent; cursor:pointer;" aria-label="ערוך רשומה"></button>
+        `;
+
+            el.querySelector('.edit-btn-trigger').addEventListener('click', () => openEditModal(log.id));
+            logList.appendChild(el);
+        });
+    }
+
+    // Charting
+    function initChart() {
+        const ctx = document.getElementById('efficiencyChart');
+        if (!ctx) return;
+
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.font.weight = '500';
+
+        efficiencyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'חישוב',
+                        data: [],
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#6366f1',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'מחשב רכב',
+                        data: [],
+                        borderColor: '#a855f7',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#a855f7',
+                        pointBorderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        tension: 0.4,
+                        fill: false,
+                        yAxisID: 'y',
+                        borderDash: [5, 5]
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end',
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 8,
+                            padding: 15,
+                            font: { size: 12, weight: '600' }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        titleFont: { family: "'Outfit', sans-serif", size: 13, weight: '700' },
+                        bodyFont: { family: "'Inter', sans-serif", size: 12 },
+                        padding: 12,
+                        cornerRadius: 12,
+                        displayColors: true,
+                        rtl: true
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 11 } }
+                    },
+                    y: {
+                        grid: { color: '#f1f5f9' },
+                        ticks: { font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateChart() {
+        if (!efficiencyChart) return;
+
+        // Only chart refuel logs
+        const refuelLogs = logs.filter(l => !l.isBase);
+
+        // Reverse logs for chronological order left-to-right
+        const chronologicalLogs = [...refuelLogs].reverse();
+
+        const labels = chronologicalLogs.map(l => {
+            return new Date(l.date).toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
+        });
+
+        let dataCalc, dataCarCalc;
+        if (unitPreference === 'l100km') {
+            dataCalc = chronologicalLogs.map(l => l.l100km);
+            dataCarCalc = chronologicalLogs.map(l => l.carKmL ? (100 / l.carKmL) : null);
+        } else {
+            dataCalc = chronologicalLogs.map(l => l.kmL);
+            dataCarCalc = chronologicalLogs.map(l => l.carKmL || null);
+        }
+
+        efficiencyChart.data.labels = labels;
+        efficiencyChart.data.datasets[0].data = dataCalc;
+        efficiencyChart.data.datasets[1].data = dataCarCalc;
+
+        // Check if we have any car data to show the second line
+        const hasCarData = dataCarCalc.some(v => v !== null);
+        efficiencyChart.data.datasets[1].hidden = !hasCarData;
+
+        efficiencyChart.update();
+    }
+
+    // Start app
+    document.addEventListener('DOMContentLoaded', init);
+
+</script>
+
+</html>

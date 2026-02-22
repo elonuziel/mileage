@@ -30,8 +30,14 @@ Single-file versions of the application that require no local web server.
 
 1. Clone or download the repository.
 2. Open one of the standalone files directly in any modern web browser:
-   - **`mileage_standalone.html`** — Cloud sync via JSONBin.io
-   - **`mileage_standalone_jsonhosting.html`** — Cloud sync via JSONHosting.com (no account needed)
+   - **`mileage_standalone.html`** — Cloud sync via JSONBin.io (Original Style)
+   - **`mileage_standalone_jsonhosting.html`** — Cloud sync via JSONHosting.com (Original Style)
+
+### Alternative UI Themes
+For a more modern aesthetic, check out these variants in the [`options/`](./options) directory:
+
+- **[Modern Slate](./options/mileage_standalone_modern_slate.html)**: A clean, indigo-accented theme with a modern "glass" feel.
+- **[Warm Teal](./options/mileage_standalone_warm_teal.html)**: A gentle, easy-on-the-eyes theme with a warm beige background and teal accents (Optimized for readability).
 
 ### Cloud Backup (JSONHosting Edition)
 The JSONHosting standalone version allows you to back up your data to the cloud **without creating an account**:
