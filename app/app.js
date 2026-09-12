@@ -42,11 +42,13 @@ const editOdo = document.getElementById('editOdo');
 const editFuel = document.getElementById('editFuel');
 const editDate = document.getElementById('editDate');
 const editCarKmL = document.getElementById('editCarKmL');
+const editKmToEmpty = document.getElementById('editKmToEmpty');
 const editLogId = document.getElementById('editLogId');
 const closeEditBtn = document.getElementById('closeEditBtn');
 const deleteLogBtn = document.getElementById('deleteLogBtn');
 const editFuelGroup = document.getElementById('editFuelGroup');
 const editCarKmLGroup = document.getElementById('editCarKmLGroup');
+const editKmToEmptyGroup = document.getElementById('editKmToEmptyGroup');
 
 const elAvgL100 = document.getElementById('avgL100');
 const elAvgKmL = document.getElementById('avgKmL');
@@ -167,6 +169,11 @@ function renderForm() {
                     <input type="number" id="carKmL" step="0.1" placeholder="לדוגמה, 12.5">
                     <div class="helper-text">הזן את הממוצע שמציג מחשב הרכב בזמן התדלוק להשוואה</div>
                 </div>
+                <div class="input-group">
+                    <label for="kmToEmpty">ק"מ שנותרו לריקות (אופציונלי)</label>
+                    <input type="number" id="kmToEmpty" step="1" placeholder="לדוגמה, 80">
+                    <div class="helper-text">הזן את מספר הק"מ שנותרו עד ריקות הדלק לפי תצוגת הרכב</div>
+                </div>
                 <button type="submit" class="btn-primary">
                     <span>שמור תיעוד תדלוק</span>
                 </button>
@@ -209,6 +216,8 @@ function handleRefuelLog(e) {
     const fuel = parseFloat(document.getElementById('fuelAmt').value);
     const carKmLInput = document.getElementById('carKmL').value;
     const carKmL = carKmLInput ? parseFloat(carKmLInput) : null;
+    const kmToEmptyInput = document.getElementById('kmToEmpty').value;
+    const kmToEmpty = kmToEmptyInput ? parseFloat(kmToEmptyInput) : null;
 
     if (isNaN(currentOdo) || isNaN(fuel) || fuel <= 0) {
         alert("אנא הכנס מספרים תקינים. כמות הדלק חייבת להיות חיובית.");
@@ -225,6 +234,11 @@ function handleRefuelLog(e) {
         return;
     }
 
+    if (kmToEmpty !== null && (isNaN(kmToEmpty) || kmToEmpty < 0)) {
+        alert("ק\"מ שנותרו חייב להיות מספר אי-שלילי.");
+        return;
+    }
+
     const distance = currentOdo - lastLog.odometer;
     const l100km = (fuel / distance) * 100;
     const kmL = distance / fuel;
@@ -238,6 +252,7 @@ function handleRefuelLog(e) {
         l100km: parseFloat(l100km.toFixed(2)),
         kmL: parseFloat(kmL.toFixed(2)),
         carKmL: carKmL,
+        kmToEmpty: kmToEmpty,
         isBase: false
     };
 
@@ -300,12 +315,16 @@ function openEditModal(id) {
         editFuel.value = '';
         editCarKmLGroup.style.display = 'none';
         editCarKmL.value = '';
+        editKmToEmptyGroup.style.display = 'none';
+        editKmToEmpty.value = '';
     } else {
         editFuelGroup.style.display = 'flex';
         editFuel.setAttribute('required', 'true');
         editFuel.value = log.fuel;
         editCarKmLGroup.style.display = 'flex';
         editCarKmL.value = log.carKmL || '';
+        editKmToEmptyGroup.style.display = 'flex';
+        editKmToEmpty.value = log.kmToEmpty || '';
     }
 
     editModal.showModal();
@@ -350,6 +369,14 @@ function handleEditLogSubmit(e) {
             return;
         }
         log.carKmL = carKmLValue;
+
+        const kmToEmptyInput = editKmToEmpty.value;
+        const kmToEmptyValue = kmToEmptyInput ? parseFloat(kmToEmptyInput) : null;
+        if (kmToEmptyValue !== null && (isNaN(kmToEmptyValue) || kmToEmptyValue < 0)) {
+            alert("ק\"מ שנותרו חייב להיות מספר אי-שלילי.");
+            return;
+        }
+        log.kmToEmpty = kmToEmptyValue;
     }
 
     editModal.close();
@@ -434,8 +461,11 @@ function parseCSV(csvText) {
             if (!parsedDate) continue;
 
             // Check if we have the 8th column (carKmL) - backward compatible
+            // Check if we have the 9th column (kmToEmpty) - backward compatible
             const carKmL = cols.length >= 8 && cols[6].trim() !== '' ? parseFloat(cols[6]) : null;
-            const typeCol = cols.length >= 8 ? cols[7] : cols[6];
+            const hasKmToEmpty = cols.length >= 9;
+            const kmToEmpty = hasKmToEmpty && cols[7].trim() !== '' ? parseFloat(cols[7]) : null;
+            const typeCol = hasKmToEmpty ? cols[8] : (cols.length >= 8 ? cols[7] : cols[6]);
 
             importedLogs.push({
                 id: Date.now() + i,
@@ -446,6 +476,7 @@ function parseCSV(csvText) {
                 l100km: parseFloat(cols[4]),
                 kmL: parseFloat(cols[5]),
                 carKmL: carKmL,
+                kmToEmpty: kmToEmpty,
                 isBase: typeCol.trim() === "Base Reading"
             });
         }
@@ -478,7 +509,7 @@ function handleExportCSV() {
     }
 
     let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Date,Odometer (km),Distance Driven (km),Fuel (L),L/100km,km/L,Car km/L,Type\n";
+    csvContent += "Date,Odometer (km),Distance Driven (km),Fuel (L),L/100km,km/L,Car km/L,Km to Empty,Type\n";
 
     // Export in chronological order (oldest first)
     const exportLogs = [...logs].reverse();
@@ -486,9 +517,10 @@ function handleExportCSV() {
     exportLogs.forEach(row => {
         const typeStr = row.isBase ? "Base Reading" : "Refuel";
         const carKmLStr = row.carKmL || '';
+        const kmToEmptyStr = row.kmToEmpty != null ? row.kmToEmpty : '';
         const d = new Date(row.date);
         const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        const rowStr = `${dateStr},${row.odometer},${row.distance},${row.fuel},${row.l100km},${row.kmL},${carKmLStr},${typeStr}`;
+        const rowStr = `${dateStr},${row.odometer},${row.distance},${row.fuel},${row.l100km},${row.kmL},${carKmLStr},${kmToEmptyStr},${typeStr}`;
         csvContent += rowStr + "\n";
     });
 
@@ -766,6 +798,10 @@ function renderList() {
             `${log.odometer}ק"מ` :
             `${log.odometer}ק"מ • +${log.distance}ק"מ • ${log.fuel}ליטר`;
 
+        const kmToEmptyMarkup = (!log.isBase && log.kmToEmpty != null)
+            ? `<span style="font-size:0.8rem; color:var(--text-secondary);">⛽ ${log.kmToEmpty} ק"מ לריקות</span>`
+            : '';
+
         const el = document.createElement('div');
         el.className = 'log-item';
 
@@ -776,6 +812,7 @@ function renderList() {
                     <button class="btn-text edit-btn" style="color:var(--accent-1); font-size:0.8rem;" aria-label="ערוך רשומה">ערוך ✏️</button>
                 </div>
                 <span class="values">${metricsMarkup}</span>
+                ${kmToEmptyMarkup}
             </div>
             <div class="log-eff">
                 ${effMarkup}
